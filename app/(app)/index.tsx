@@ -1,5 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { router } from "expo-router"
 import { useEffect, useState } from "react"
 import {
   StyleSheet,
@@ -45,22 +43,11 @@ function LocationComponent() {
 }
 
 export default function HomeScreen() {
-  const { currentUser, userSignOut } = useAuth()
   const [reports, setReports] = useState([])
   const [lastReport, setLastReport] = useState(null)
   const [isLoading, setLoading] = useState(false)
   const [isRefresh, setRefresh] = useState(false)
   const [value, setValue] = useState("")
-
-  const handleSignOut = async () => {
-    try {
-      await AsyncStorage.multiRemove(["guest", "not_first_time"])
-      router.replace("/signin")
-      if (currentUser) await userSignOut()
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -106,17 +93,10 @@ export default function HomeScreen() {
       onEndReached={onEnd}
       ListHeaderComponent={<LocationComponent />}
       ListFooterComponent={
-        <>
-          <LoadingSkeleton
-            isLoading={isLoading}
-            firstLoad={lastReport ? false : true}
-          />
-          <Text style={styles.text}>
-            Hello World! 🎉{" "}
-            {currentUser ? JSON.stringify(currentUser?.email) : "Guest"}
-          </Text>
-          <Button title="Keluar" onPress={handleSignOut} />
-        </>
+        <LoadingSkeleton
+          isLoading={isLoading}
+          firstLoad={lastReport ? false : true}
+        />
       }
       renderItem={({ item }) => (
         <Card

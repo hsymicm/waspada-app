@@ -10,6 +10,7 @@ import {
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Colors } from "../themes/Colors"
+import { useNavigation } from "@react-navigation/native"
 import {
   ArrowLeftIcon as Arrow,
   Bars3Icon as Hamburger,
@@ -39,6 +40,8 @@ export default function Header({
   value,
   setValue,
 }: HeaderProps) {
+  const navigator = useNavigation()
+
   return (
     <SafeAreaView>
       <Shadow
@@ -51,7 +54,7 @@ export default function Header({
           <View style={styles.columnContainer}>
             <View style={styles.rowContainer}>
               {backButtonShown && !searchBarShown && (
-                <StyledIconButton onPress={() => {}} variant="secondary" width={46}>
+                <StyledIconButton onPress={() => navigator.goBack()} variant="secondary" width={46}>
                   <Arrow color={Colors.primaryDark} />
                 </StyledIconButton>
               )}
@@ -65,7 +68,7 @@ export default function Header({
               {titleShown && !searchBarShown && (
                 <Text style={styles.title}>{title}</Text>
               )}
-              <StyledIconButton onPress={() => {}} width={46}>
+              <StyledIconButton onPress={() => navigation.openDrawer()} width={46}>
                 <Hamburger color={Colors.white} />
               </StyledIconButton>
             </View>

@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { Drawer } from "expo-router/drawer"
 import Header from "../../components/Header"
 import ContentFilter from "../../components/ContentFilter"
+import CustomDrawer from "../../components/CustomDrawer"
 
 const checkFirstLogin = async () => {
   try {
@@ -36,23 +37,41 @@ export default function AppLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer>
+      <Drawer
+        screenOptions={{
+          drawerPosition: "right",
+        }}
+        drawerContent={({ navigation }, props: any) => (
+          <CustomDrawer navigation={navigation} {...props} />
+        )}
+      >
         <Drawer.Screen
           name="index"
           options={{
-            header: () => (
+            header: ({ navigation }) => (
               <Header
-                title="Header"
+                title="Beranda"
                 value={search}
+                navigation={navigation}
                 setValue={setSearch}
                 searchBarShown
-                navigation={null}
               >
                 <ContentFilter />
               </Header>
             ),
           }}
           initialParams={{ search }}
+        />
+        <Drawer.Screen
+          name="(auth)/addpost"
+          options={{
+            header: ({ navigation }) => (
+              <Header
+                title="Lapor Kecelakaan"
+                navigation={navigation}
+              />
+            ),
+          }}
         />
       </Drawer>
     </GestureHandlerRootView>
