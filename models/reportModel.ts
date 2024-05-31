@@ -62,6 +62,8 @@ export const getReports = {
 
 
       return { data: arr, lastKey: lastVisible }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error)
+    }
   },
 }
