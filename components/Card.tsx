@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     resizeMode: "cover",
-    backgroundColor: Colors.black,
+    backgroundColor: "#9FA3B8",
     borderRadius: 16,
   },
   infoContainer: {
