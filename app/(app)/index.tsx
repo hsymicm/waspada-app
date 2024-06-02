@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
   FlatList,
   RefreshControl,
 } from "react-native"
@@ -11,11 +10,10 @@ import {
 import { Colors } from "../../themes/Colors"
 import { MapPinIcon as Pin } from "react-native-heroicons/solid"
 
-import { useAuth } from "../../contexts/AuthContext"
 import { getReports } from "../../models/reportModel"
 
 import Card from "../../components/Card"
-import LoadingSkeleton from "../../components/LoadingSkeleton"
+import CardSkeleton from "../../components/Skeleton/CardSkeleton"
 
 function LocationComponent() {
   return (
@@ -93,13 +91,14 @@ export default function HomeScreen() {
       onEndReached={onEnd}
       ListHeaderComponent={<LocationComponent />}
       ListFooterComponent={
-        <LoadingSkeleton
+        <CardSkeleton
           isLoading={isLoading}
           firstLoad={lastReport ? false : true}
         />
       }
       renderItem={({ item }) => (
         <Card
+          id={item.uid}
           rating={item.rating}
           description={item.description}
           date={item.date}
