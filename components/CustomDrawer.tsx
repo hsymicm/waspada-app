@@ -8,17 +8,15 @@ import { ScrollView } from "react-native-gesture-handler"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useAuth } from "../contexts/AuthContext"
 
-export default function CustomDrawer({navigation, ...props}) {
+export default function CustomDrawer({ navigation }) {
   const { currentUser, userSignOut } = useAuth()
 
   const handleSignOut = async () => {
-    
     try {
       await AsyncStorage.multiRemove(["guest", "not_first_time"])
       navigation.reset({
         index: 0,
-        routes: [{ name: "signin"}],
-  
+        routes: [{ name: "signin" }],
       })
       if (currentUser) await userSignOut()
     } catch (error) {
@@ -35,20 +33,57 @@ export default function CustomDrawer({navigation, ...props}) {
         </StyledIconButton>
       </View>
       <ScrollView contentContainerStyle={styles.drawerListContainer}>
-        <TouchableOpacity onPress={() => router.navigate("/(app)")} style={[styles.drawerItemContainer, true && { backgroundColor: Colors.lightGray}]}>
-          <Text style={[styles.drawerItemText, true && { color: Colors.accent }]}>Beranda</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.navigate("/(app)/(auth)/addpost")} style={styles.drawerItemContainer}>
-          <Text style={styles.drawerItemText}>Lapor Kecelakaan</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.drawerItemContainer}>
-          <Text style={styles.drawerItemText}>Profil</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSignOut} style={styles.drawerItemContainer}>
-          <Text style={[styles.drawerItemText, { color: Colors.error.primary }]}>
-            Keluar
+        <TouchableOpacity
+          onPress={() => router.navigate("/(app)")}
+          style={[
+            styles.drawerItemContainer,
+            true && { backgroundColor: Colors.lightGray },
+          ]}
+        >
+          <Text
+            style={[styles.drawerItemText, true && { color: Colors.accent }]}
+          >
+            Beranda
           </Text>
         </TouchableOpacity>
+        {currentUser ? (
+          <>
+            <TouchableOpacity
+              onPress={() => router.navigate("/(app)/(auth)/addpost")}
+              style={styles.drawerItemContainer}
+            >
+              <Text style={styles.drawerItemText}>Lapor Kecelakaan</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.drawerItemContainer}>
+              <Text style={styles.drawerItemText}>Profil</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSignOut}
+              style={styles.drawerItemContainer}
+            >
+              <Text
+                style={[styles.drawerItemText, { color: Colors.error.primary }]}
+              >
+                Keluar
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              onPress={() => router.navigate("/signin")}
+              style={styles.drawerItemContainer}
+            >
+              <Text style={styles.drawerItemText}>Masuk</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+            onPress={() => router.navigate("/signup")}
+            style={styles.drawerItemContainer}
+          >
+            <Text style={styles.drawerItemText}>Daftar</Text>
+          </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   )
