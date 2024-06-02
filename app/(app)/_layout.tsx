@@ -1,4 +1,4 @@
-import { Redirect } from "expo-router"
+import { Redirect, Slot } from "expo-router"
 import { useEffect, useState } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
@@ -41,13 +41,14 @@ export default function AppLayout() {
         screenOptions={{
           drawerPosition: "right",
         }}
-        drawerContent={({ navigation }, props: any) => (
-          <CustomDrawer navigation={navigation} {...props} />
+        drawerContent={({ navigation }) => (
+          <CustomDrawer navigation={navigation} />
         )}
       >
         <Drawer.Screen
           name="index"
           options={{
+            // unmountOnBlur: true,
             header: ({ navigation }) => (
               <Header
                 title="Beranda"
@@ -63,13 +64,20 @@ export default function AppLayout() {
           initialParams={{ search }}
         />
         <Drawer.Screen
+          name="detail/[id]"
+          options={{
+            unmountOnBlur: true,
+            header: ({ navigation }) => (
+              <Header title="Detail" navigation={navigation} />
+            ),
+          }}
+        />
+        <Drawer.Screen
           name="(auth)/addpost"
           options={{
+            unmountOnBlur: true,
             header: ({ navigation }) => (
-              <Header
-                title="Lapor Kecelakaan"
-                navigation={navigation}
-              />
+              <Header title="Lapor Kecelakaan" navigation={navigation} />
             ),
           }}
         />
