@@ -1,13 +1,15 @@
 import {
   collection,
   getDocs,
+  getDoc,
+  doc,
   limit,
   orderBy,
   query,
   startAfter,
 } from "firebase/firestore"
 import { FIREBASE_DB as db } from "../firebase.config"
-import { formatElapsedTime } from "../libs/utils"
+import { formatElapsedTime, formatTimestamp } from "../libs/utils"
 
 export const getReports = {
   firstBatch: async function () {
@@ -15,7 +17,7 @@ export const getReports = {
       const reportRef = collection(db, "reports_temp")
       const dataQuery = query(
         reportRef,
-        orderBy("id", "asc"),limit(4)
+        orderBy("id", "asc"),limit(6)
       )
 
       const dataSnapshot = await getDocs(dataQuery)
@@ -44,7 +46,7 @@ export const getReports = {
         reportRef,
         orderBy("id", "asc"),
         startAfter(key),
-        limit(4)
+        limit(6)
       )
 
       const dataSnapshot = await getDocs(dataQuery)
@@ -66,4 +68,25 @@ export const getReports = {
       console.log(error)
     }
   },
+}
+
+export const getReportDetail = async (id: string) => {
+  if (!id) return null
+
+  try {
+    const reportCollection = collection(db, "reports_temp")
+    const reportRef = doc(reportCollection, id)
+    const reportSnapshot = await getDoc(reportRef)
+
+    if (reportSnapshot.exists()) {
+      const data = reportSnapshot.data()
+      const date = formatTimestamp(data.date)
+      return { uid: reportSnapshot.id, ...data, date}
+    } else {
+      return null
+    }
+
+  } catch (error) {
+    console.log(error)
+  }
 }
