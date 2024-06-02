@@ -56,3 +56,24 @@ export const formatElapsedTime = (timestamp: any) => {
       return "Baru saja"; // "Just now" for less than a minute
   }
 }
+
+export const formatTimestamp = (timestamp: any) => {
+  const date = timestamp.toDate();
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  const day = date.getDate();
+  const month = monthNames[date.getMonth()];
+  const year = date.getFullYear();
+  
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
+  return `${month} ${day}, ${year} - ${hours}:${minutes} ${ampm}`;
+}
