@@ -1,4 +1,10 @@
-import { ImageBackground, View, Text, StyleSheet } from "react-native"
+import {
+  Image,
+  View,
+  Text,
+  StyleSheet,
+  TouchableWithoutFeedback,
+} from "react-native"
 import {
   ShareIcon,
   BookmarkIcon,
@@ -11,71 +17,101 @@ import { LinearGradient } from "expo-linear-gradient"
 import StyledIconButton from "./StyledIconButton"
 import { memo } from "react"
 import { formatRatingCounter } from "../libs/utils"
+import { router } from "expo-router"
 
-function Card({ location, date, description, rating, url, reportedAlot }) {  
+interface CardProps {
+  id: string
+  location: string
+  date: string
+  description: string
+  rating: number
+  url: string
+  reportedAlot: boolean
+}
+
+function Card({
+  id,
+  location,
+  date,
+  description,
+  rating,
+  url,
+  reportedAlot,
+}: CardProps) {
   return (
-    <ImageBackground
-      src={url}
-      style={styles.container}
-      imageStyle={{
-        borderRadius: 16,
-      }}
+    <TouchableWithoutFeedback
+      onPress={() => router.navigate(`/(app)/detail/${id}`)}
     >
-      <LinearGradient
-        colors={["rgba(0,0,0, 0.8)", "transparent"]}
-        style={styles.headerContainer}
-      >
-        <View style={styles.locationContainer}>
-          <Pin color={Colors.white} size={18} />
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={styles.locationText}
-          >
-            {location}
+      <View style={styles.container}>
+        <LinearGradient
+          colors={["rgba(0,0,0, 0.8)", "transparent"]}
+          style={styles.headerContainer}
+        >
+          <View style={styles.locationContainer}>
+            <Pin color={Colors.white} size={18} />
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.locationText}
+            >
+              {location}
+            </Text>
+          </View>
+          {reportedAlot && (
+            <View style={styles.reportIndicator}>
+              <Text style={styles.reportIndicatorText}>Banyak Laporan</Text>
+            </View>
+          )}
+        </LinearGradient>
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0, 0.8)"]}
+          style={styles.infoContainer}
+        >
+          <View style={styles.dateContainer}>
+            <Text style={styles.dateText}>{date}</Text>
+          </View>
+          <Text numberOfLines={2} style={styles.description}>
+            {description}
           </Text>
-        </View>
-        {reportedAlot && (
-          <View style={styles.reportIndicator}>
-            <Text style={styles.reportIndicatorText}>Banyak Laporan</Text>
+          <View style={styles.footerContainer}>
+            <View style={styles.actionContainer}>
+              <TouchableWithoutFeedback
+                onPress={() => console.log("Share Pressed")}
+              >
+                <View style={{ padding: 8 }}>
+                  <ShareIcon size={16} color={Colors.white} />
+                </View>
+              </TouchableWithoutFeedback>
+              <TouchableWithoutFeedback
+                onPress={() => console.log("Bookmark Pressed")}
+              >
+                <View style={{ padding: 8 }}>
+                  <BookmarkIcon size={16} color={Colors.white} />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+            <View style={styles.ratingContainer}>
+              <StyledIconButton
+                style={{ padding: 3 }}
+                variant="secondary"
+                width={24}
+              >
+                <UpVoteIcon size={16} color={Colors.primaryDark} />
+              </StyledIconButton>
+              <Text>{formatRatingCounter(rating)}</Text>
+              <StyledIconButton
+                style={{ padding: 3 }}
+                variant="secondary"
+                width={24}
+              >
+                <DownVoteIcon size={16} color={Colors.primaryDark} />
+              </StyledIconButton>
+            </View>
           </View>
-        )}
-      </LinearGradient>
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0, 0.8)"]}
-        style={styles.infoContainer}
-      >
-        <View style={styles.dateContainer}>
-          <Text style={styles.dateText}>{date}</Text>
-        </View>
-        <Text numberOfLines={2} style={styles.description}>
-          {description}
-        </Text>
-        <View style={styles.footerContainer}>
-          <View style={styles.actionContainer}>
-            <ShareIcon size={16} color={Colors.white} />
-            <BookmarkIcon size={16} color={Colors.white} />
-          </View>
-          <View style={styles.ratingContainer}>
-            <StyledIconButton
-              style={{ padding: 3 }}
-              variant="secondary"
-              width={24}
-            >
-              <UpVoteIcon size={16} color={Colors.primaryDark} />
-            </StyledIconButton>
-            <Text>{formatRatingCounter(rating)}</Text>
-            <StyledIconButton
-              style={{ padding: 3 }}
-              variant="secondary"
-              width={24}
-            >
-              <DownVoteIcon size={16} color={Colors.primaryDark} />
-            </StyledIconButton>
-          </View>
-        </View>
-      </LinearGradient>
-    </ImageBackground>
+        </LinearGradient>
+        <Image source={{ uri: url }} style={styles.image} />
+      </View>
+    </TouchableWithoutFeedback>
   )
 }
 
@@ -120,7 +156,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1 / 1,
     justifyContent: "space-between",
     width: "100%",
-    resizeMode: "cover",
     backgroundColor: "#9FA3B8",
     borderRadius: 16,
   },
@@ -153,8 +188,7 @@ const styles = StyleSheet.create({
   actionContainer: {
     display: "flex",
     flexDirection: "row",
-    gap: 24,
-    padding: 4,
+    gap: 8,
   },
   footerContainer: {
     display: "flex",
@@ -176,6 +210,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.black,
   },
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+    position: "absolute",
+    left: 0,
+    top: 0,
+    zIndex: -1,
+    borderRadius: 16,
+  },
 })
 
-export default memo(Card)
+export default Card
