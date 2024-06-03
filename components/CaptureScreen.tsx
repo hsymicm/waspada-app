@@ -35,7 +35,7 @@ export default function CameraScreen({ setCameraModalVisible }) {
   const screenRatio = height / width
   const [isRatioSet, setIsRatioSet] = useState(false)
 
-  const cameraRef = useRef()
+  const cameraRef = useRef<Camera>(null)
 
   if (!permission) {
     return <View />
@@ -91,14 +91,9 @@ export default function CameraScreen({ setCameraModalVisible }) {
   }
 
   if (!permission.granted) {
-    return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: "center" }}>
-          We need your permission to show the camera
-        </Text>
-        <Button onPress={requestPermission} title="grant permission" />
-      </View>
-    )
+    requestPermission()
+
+    return null
   }
 
   return (
