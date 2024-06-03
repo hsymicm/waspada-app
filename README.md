@@ -1,6 +1,6 @@
 # Waspada App
 
-Waspada App is a mobile application designed to provide real-time information about traffic accidents, helping them to stay informed and safe.
+Waspada App is a mobile application designed to provide real-time information about traffic accidents built with React Native, Expo, and Firebase.
 
 ![thumbnail](https://i.imgur.com/tHgC09W.png)
 
