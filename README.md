@@ -2,6 +2,8 @@
 
 Waspada App is a mobile application designed to provide real-time information about traffic accidents, helping them to stay informed and safe.
 
+![thumbnail](https://i.imgur.com/tHgC09W.png)
+
 ## 🛠️Features
 
 - Real-time traffic accidents information
