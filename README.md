@@ -4,14 +4,14 @@ Waspada is a mobile application designed to provide real-time information about 
 
 ![thumbnail](https://i.imgur.com/tHgC09W.png)
 
-## 🛠️Features
+## 🛠️ Features
 
 - Real-time traffic accidents information
 - Location-based traffic accidents tracking
 - Accurate traffic accidents location
 - User-friendly interface
 
-## ⚙️Installation
+## ⚙️ Installation
 
 To get started with the Waspada App, follow these steps:
 
@@ -34,7 +34,7 @@ To get started with the Waspada App, follow these steps:
     npm start
     ```
 
-## 💻Technologies Used
+## 💻 Technologies Used
 
 - React Native
 - Firebase
