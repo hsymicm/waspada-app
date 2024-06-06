@@ -40,4 +40,7 @@ To get started with the Waspada App, follow these steps:
 - Firebase
 - Expo
 - Expo Router
+- Expo Camera
+- Expo AV
+- Expo Media Library
 - Google Maps API
