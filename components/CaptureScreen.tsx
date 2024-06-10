@@ -4,12 +4,15 @@ import {
   Dimensions,
   View,
   Text,
+  Image,
   Button,
   TouchableOpacity,
   Platform,
 } from "react-native"
-import { Camera, CameraType } from "expo-camera"
+import * as Location from "expo-location"
+import { Camera, CameraType, FlashMode, ImageType } from "expo-camera"
 import { Video } from "expo-av"
+import { Image as ImageCompressor } from "react-native-compressor"
 
 import {
   XMarkIcon,
@@ -20,13 +23,26 @@ import {
 } from "react-native-heroicons/solid"
 import { Colors } from "../themes/Colors"
 
-export default function CameraScreen({ setCameraModalVisible }) {
+export default function CameraScreen({ setCameraModalVisible, setResult }) {
+  // Location Permissions
+  const [locationPermission, requestLocationPermission] =
+    Location.useForegroundPermissions()
+
   // Camera Permissions
-  const [permission, requestPermission] = Camera.useCameraPermissions()
+  const [cameraPermission, requestCameraPermission] =
+    Camera.useCameraPermissions()
 
   // Camera Options
   const [isFlash, setFLash] = useState(false)
-  const [isPhoto, setPhoto] = useState(true)
+  const [isPhoto, setIsPhoto] = useState(true)
+
+  const [compressedImage, setCompressedImage] = useState(null)
+  const [compressedVideo, setCompressedVideo] = useState(null)
+
+  // Results
+  const [image, setImage] = useState(null)
+
+  const [location, setLocation] = useState(null)
 
   // Screen Ratios
   const [imagePadding, setImagePadding] = useState(0)
@@ -35,22 +51,18 @@ export default function CameraScreen({ setCameraModalVisible }) {
   const screenRatio = height / width
   const [isRatioSet, setIsRatioSet] = useState(false)
 
-  const cameraRef = useRef<Camera>(null)
+  const cameraRef = useRef(null)
 
-  if (!permission) {
+  if (!cameraPermission && !locationPermission) {
     return <View />
   }
 
   const prepareRatio = async () => {
     let desiredRatio = "4:3" // Start with the system default
 
-    // This issue only affects Android
     if (Platform.OS === "android") {
       const ratios = await cameraRef.current.getSupportedRatiosAsync()
 
-      // Calculate the width/height of each of the supported camera ratios
-      // These width/height are measured in landscape mode
-      // find the ratio that is closest to the screen ratio without going over
       let distances = {}
       let realRatios = {}
       let minDistance = null
@@ -58,7 +70,6 @@ export default function CameraScreen({ setCameraModalVisible }) {
         const parts = ratio.split(":")
         const realRatio = parseInt(parts[0]) / parseInt(parts[1])
         realRatios[ratio] = realRatio
-        // ratio can't be taller than screen, so we don't want an abs()
         const distance = screenRatio - realRatio
         distances[ratio] = distance
         if (minDistance == null) {
@@ -69,17 +80,14 @@ export default function CameraScreen({ setCameraModalVisible }) {
           }
         }
       }
-      // set the best match
+
       desiredRatio = minDistance
-      //  calculate the difference between the camera width and the screen height
       const remainder = Math.floor(
         (height - realRatios[desiredRatio] * width) / 2
       )
-      // set the preview padding and preview ratio
+
       setImagePadding(remainder)
       setRatio(desiredRatio)
-      // Set a flag so we don't do this
-      // calculation each time the screen refreshes
       setIsRatioSet(true)
     }
   }
@@ -90,10 +98,110 @@ export default function CameraScreen({ setCameraModalVisible }) {
     }
   }
 
-  if (!permission.granted) {
-    requestPermission()
+  if (!cameraPermission?.granted) {
+    requestCameraPermission()
 
     return null
+  }
+
+  if (!locationPermission?.granted) {
+    requestLocationPermission()
+
+    return null
+  }
+
+  const takePicture = async () => {
+    if (isRatioSet) {
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+
+      const data = await cameraRef.current.takePictureAsync({
+        exif: true,
+        quality: 0,
+        imageType: ImageType.jpg,
+        skipProcessing: true,
+      })
+
+      data.exif = {
+        ...data.exif,
+        GPSLatitude: loc.coords.latitude,
+        GPSLongitude: loc.coords.longitude,
+        GPSAltitude: loc.coords.altitude,
+      }
+
+      setImage(data)
+    }
+  }
+
+  
+  const compressResult = async (image: any) => {
+    if (isPhoto) {
+      const compress = await ImageCompressor.compress(image.uri, {
+        returnableOutputType: "uri",
+      })
+
+      const final = {...image, uri: compress}
+      setResult(final)
+    }
+  }
+
+  if (image) {
+    return (
+      <View style={styles.container}>
+        <View
+          style={{
+            position: "relative",
+            marginTop: imagePadding,
+            marginBottom: imagePadding,
+          }}
+        >
+          <Image
+            source={{ uri: image.uri }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+          <View
+            style={{
+              width: "100%",
+              position: "absolute",
+              bottom: 0,
+              padding: 16,
+            }}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-evenly",
+                padding: 8,
+                gap: 16,
+                backgroundColor: "#00000064",
+                borderRadius: 99,
+              }}
+            >
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setImage(null)}
+                style={{ padding: 16 }}
+              >
+                <Text style={[styles.text, { fontSize: 18 }]}>Ulangi</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  compressResult(image)
+                  setCameraModalVisible(false)
+                }}
+                style={{ padding: 16 }}
+              >
+                <Text style={[styles.text, { fontSize: 18 }]}>Lanjut</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
+    )
   }
 
   return (
@@ -103,6 +211,13 @@ export default function CameraScreen({ setCameraModalVisible }) {
         onCameraReady={setCameraReady}
         ratio={ratio}
         type={CameraType.back}
+        flashMode={
+          isFlash && isPhoto
+            ? FlashMode.on
+            : isFlash && !isPhoto
+            ? FlashMode.torch
+            : FlashMode.off
+        }
         style={[
           styles.camera,
           { marginTop: imagePadding, marginBottom: imagePadding },
@@ -112,19 +227,24 @@ export default function CameraScreen({ setCameraModalVisible }) {
           <>
             <View style={styles.headerContainer}>
               <TouchableOpacity
+                activeOpacity={0.7}
                 style={styles.button}
                 onPress={() => setCameraModalVisible(false)}
               >
                 <XMarkIcon size={20} color={Colors.white} />
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.button}
+                activeOpacity={0.7}
+                style={[
+                  styles.button,
+                  isFlash && { backgroundColor: Colors.white },
+                ]}
                 onPress={() => setFLash(!isFlash)}
               >
                 {!isFlash ? (
                   <BoltSlashIcon size={20} color={Colors.white} />
                 ) : (
-                  <BoltIcon size={20} color={Colors.white} />
+                  <BoltIcon size={20} color={Colors.black} />
                 )}
               </TouchableOpacity>
             </View>
@@ -136,7 +256,8 @@ export default function CameraScreen({ setCameraModalVisible }) {
             >
               <View style={styles.cameraMenuContainer}>
                 <TouchableOpacity
-                  onPress={() => setPhoto(false)}
+                  activeOpacity={0.7}
+                  onPress={() => setIsPhoto(false)}
                   style={[
                     styles.capsuleButton,
                     isPhoto === false && { backgroundColor: Colors.white },
@@ -154,7 +275,8 @@ export default function CameraScreen({ setCameraModalVisible }) {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setPhoto(true)}
+                  activeOpacity={0.7}
+                  onPress={() => setIsPhoto(true)}
                   style={[
                     styles.capsuleButton,
                     isPhoto === true && { backgroundColor: Colors.white },
@@ -173,17 +295,26 @@ export default function CameraScreen({ setCameraModalVisible }) {
                 </TouchableOpacity>
               </View>
               <View style={styles.cameraControlContainer}>
-                <View style={{
-                  padding: 8,
-                  borderRadius: 99,
-                  backgroundColor: "#00000032",
-                }}>
+                <View
+                  style={{
+                    padding: 8,
+                    borderRadius: 99,
+                    backgroundColor: "#00000032",
+                  }}
+                >
                   {isPhoto ? (
-                    <TouchableOpacity style={styles.cameraControlButton}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={takePicture}
+                      style={styles.cameraControlButton}
+                    >
                       <CameraIcon size={24} color="#454545" />
                     </TouchableOpacity>
                   ) : (
-                    <TouchableOpacity style={styles.cameraControlButton}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      style={styles.cameraControlButton}
+                    >
                       <VideoCameraIcon size={24} color="#f54545" />
                     </TouchableOpacity>
                   )}
