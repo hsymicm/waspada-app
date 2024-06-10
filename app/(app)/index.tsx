@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from "react"
-import { StyleSheet, Text, View, FlatList, RefreshControl } from "react-native"
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native"
 
 import { Colors } from "../../themes/Colors"
-import { MapPinIcon as Pin } from "react-native-heroicons/solid"
+import { MapPinIcon as Pin, PlusIcon } from "react-native-heroicons/solid"
 
 import { getReports, getReportsByLocation } from "../../models/reportModel"
 
@@ -10,11 +17,11 @@ import Card from "../../components/Card"
 import CardSkeleton from "../../components/Skeleton/CardSkeleton"
 import * as Location from "expo-location"
 import { revGeocode } from "../../libs/geo"
-import { useFocusEffect, useNavigation } from "expo-router"
+import { router, useNavigation } from "expo-router"
+import { Shadow } from "react-native-shadow-2"
+import { useAuth } from "../../contexts/AuthContext"
 
 function LocationComponent({ address }: { address: string | null }) {
-  // console.log(address)
-
   return (
     <View style={styles.locationContainer}>
       <View
@@ -51,6 +58,7 @@ export default function HomeScreen() {
     Location.useForegroundPermissions()
 
   const navigation = useNavigation()
+  const { currentUser } = useAuth()
 
   const fetchData = async () => {
     setLoading(true)
@@ -115,26 +123,9 @@ export default function HomeScreen() {
     return { latitude, longitude }
   }
 
-  // useFocusEffect(useCallback(() => {
-  //   // fetchNearbyReports()
-  //   const unsubscribe = navigation.addListener('focus', () => {
-  //     const routes = navigation.getState().routes;
-  //     const currentRoute = routes[routes.length - 1];
-
-  //     if (currentRoute.params?.updated) {
-  //       fetchNearbyReports();
-  //       navigation.setParams({ updated: false }); // Reset the update flag
-  //     }
-  //   });
-
-  //   return unsubscribe;
-  // }, [])
-  // )
-
   useEffect(() => {
     fetchNearbyReports()
   }, [])
-
 
   if (!locationPermission) {
     return <View />
@@ -147,43 +138,64 @@ export default function HomeScreen() {
   }
 
   return (
-    <FlatList
-      initialNumToRender={10}
-      maxToRenderPerBatch={10}
-      style={{ backgroundColor: Colors.lightGray }}
-      contentContainerStyle={styles.container}
-      data={reports}
-      keyExtractor={(item) => item.uid}
-      showsVerticalScrollIndicator={false}
-      // onEndReachedThreshold={0.8}
-      // onEndReached={onEnd}
-      ListHeaderComponent={<LocationComponent address={currentAddress} />}
-      ListFooterComponent={
-        <CardSkeleton
-          isLoading={isLoading}
-          firstLoad={lastReport ? false : true}
-        />
-      }
-      renderItem={({ item }) => (
-        <Card
-          id={item.uid}
-          rating={item.voteCounter}
-          description={item.description}
-          date={item.date}
-          location={`${item.subdistrict}, ${item.district}, ${item.city}.`}
-          url={item.imageUrl}
-          reportedAlot={item.many}
-        />
+    <View style={{ position: "relative" }}>
+      <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        style={{ backgroundColor: Colors.lightGray }}
+        contentContainerStyle={styles.container}
+        data={reports}
+        keyExtractor={(item) => item.uid}
+        showsVerticalScrollIndicator={false}
+        // onEndReachedThreshold={0.8}
+        // onEndReached={onEnd}
+        ListHeaderComponent={<LocationComponent address={currentAddress} />}
+        ListFooterComponent={
+          <CardSkeleton
+            isLoading={isLoading}
+            firstLoad={lastReport ? false : true}
+          />
+        }
+        renderItem={({ item }) => (
+          <Card
+            id={item.uid}
+            rating={item.voteCounter}
+            description={item.description}
+            date={item.date}
+            location={`${item.subdistrict}, ${item.district}, ${item.city}.`}
+            url={item.imageUrl}
+            reportedAlot={item.many}
+          />
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefresh}
+            onRefresh={onRefresh}
+            colors={[Colors.accent]}
+            progressBackgroundColor={Colors.white}
+          />
+        }
+      />
+      {currentUser && (
+        <TouchableOpacity
+          onPress={() => router.navigate("/(auth)/addpost")}
+          activeOpacity={1}
+          style={{ position: "absolute", bottom: 48, right: 36 }}
+        >
+          <Shadow offset={[0, 2]} distance={4} startColor={Colors.shadow}>
+            <View
+              style={{
+                backgroundColor: Colors.primary,
+                padding: 16,
+                borderRadius: 32,
+              }}
+            >
+              <PlusIcon size={28} color={Colors.white} />
+            </View>
+          </Shadow>
+        </TouchableOpacity>
       )}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefresh}
-          onRefresh={onRefresh}
-          colors={[Colors.accent]}
-          progressBackgroundColor={Colors.white}
-        />
-      }
-    />
+    </View>
   )
 }
 
