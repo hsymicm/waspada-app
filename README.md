@@ -37,10 +37,12 @@ To get started with the Waspada App, follow these steps:
 ## 💻 Technologies Used
 
 - React Native
-- Firebase
 - Expo
 - Expo Router
 - Expo Camera
 - Expo AV
 - Expo Media Library
+- React Native Compressor
+- Firebase
+- HERE Geocoding API
 - Google Maps API
