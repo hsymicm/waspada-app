@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, Image, StyleSheet } from "react-native"
 import { useState } from "react"
-import { router } from "expo-router"
+import { router, useNavigation } from "expo-router"
 import { Colors } from "../themes/Colors"
 import { handleAuthErrorMessage } from "../libs/utils"
 import { AuthNotification } from "../components/AuthNotification"
@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext"
 
 import TextInputField from "../components/TextInputField"
 import StyledButton from "../components/StyledButton"
+import { StackActions } from "@react-navigation/native"
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("")
@@ -16,6 +17,8 @@ export default function ResetPassword() {
     isError: false,
     message: "",
   })
+
+  const navigation = useNavigation()
 
   const { userResetPassword } = useAuth()
 
@@ -35,10 +38,14 @@ export default function ResetPassword() {
 
     try {
       await userResetPassword(email)
-      setStatus({
-        isError: false,
-        message: "Reset password email sent successfully",
-      })
+
+      if (navigation.canGoBack()) {
+        navigation.dispatch(StackActions.popToTop())
+      }
+      
+      const path: any = `/signin?_resetpassword=true&_email=${email}`
+      router.replace(path)
+
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
     }
@@ -48,6 +55,7 @@ export default function ResetPassword() {
 
   return (
     <ScrollView
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
       style={{
         position: "relative",
