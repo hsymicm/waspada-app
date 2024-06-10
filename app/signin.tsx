@@ -9,6 +9,7 @@ import { useAuth } from "../contexts/AuthContext"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { AuthNotification } from "../components/AuthNotification"
 import { handleAuthErrorMessage } from "../libs/utils"
+import { StackActions } from "@react-navigation/native"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -26,7 +27,7 @@ export default function SignIn() {
     router.push("/signup")
   }
 
-  const { _signup, _resetpassword } = useLocalSearchParams()
+  const { _signup, _resetpassword, _email } = useLocalSearchParams()
 
   const handleSignIn = async () => {
     setFormLoading(true)
@@ -51,10 +52,11 @@ export default function SignIn() {
     try {
       await userSignIn(email, password)
       await AsyncStorage.setItem("not_first_time", "true")
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "(app)" }],
-      })
+
+      if (navigation.canGoBack()) {
+        navigation.dispatch(StackActions.popToTop())
+      }
+      router.replace("/")
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
     }
@@ -73,10 +75,11 @@ export default function SignIn() {
       }
       await AsyncStorage.setItem("guest", JSON.stringify(tempUser))
       await AsyncStorage.setItem("not_first_time", "true")
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "(app)" }],
-      })
+
+      if (navigation.canGoBack()) {
+        navigation.dispatch(StackActions.popToTop())
+      }
+      router.replace("/")
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage() })
       // console.log(e)
@@ -99,6 +102,9 @@ export default function SignIn() {
         isError: false,
         message: "Reset password berhasil, cek email",
       })
+      if (_email) {
+        setEmail(_email)
+      }
       return
     }
   }, [])
@@ -106,6 +112,7 @@ export default function SignIn() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
         style={{
           position: "relative",
@@ -140,6 +147,7 @@ export default function SignIn() {
             <TextInputField
               value={email}
               setValue={setEmail}
+              autoCapitalize={false}
               type="email-address"
               placeholder="Masukkan email"
             />
@@ -149,6 +157,7 @@ export default function SignIn() {
             <TextInputField
               value={password}
               setValue={setPassword}
+              autoCapitalize={false}
               type="default"
               password
               placeholder="Masukkan password"
