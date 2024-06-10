@@ -123,8 +123,40 @@ export const getUserProfile = async (currentUser: any) => {
     }
 
     const userData = userDoc.data()
-    
+
     return userData
+  } catch (error) {
+    throw new Error(error.message || "Error, something happened")
+  }
+}
+
+interface ProfileProps {
+  profilePicture?: string
+  displayName?: string
+  description?: string
+}
+
+export const updateUserProfile = async (
+  currentUser: any,
+  { profilePicture, displayName, description }: ProfileProps
+) => {
+  if (!currentUser) {
+    throw new Error("Error, invalid auth")
+  }
+
+  try {
+    const userId = currentUser.uid
+    const userRef = doc(db, "users", userId)
+
+    const updateData: any = {
+      updatedAt: serverTimestamp(),
+    }
+
+    if (profilePicture !== undefined) updateData.profilePicture = profilePicture
+    if (displayName !== undefined) updateData.displayName = displayName
+    if (description !== undefined) updateData.description = description
+
+    await updateDoc(userRef, updateData)
   } catch (error) {
     throw new Error(error.message || "Error, something happened")
   }
