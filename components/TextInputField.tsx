@@ -11,7 +11,7 @@ interface TextInputFieldProps {
   value?: string
   setValue?: (arg0: string) => void
   password?: boolean
-  autoCapitalize?: boolean
+  autoCapitalize?: "sentences" | "words" | "none"
   disabled?: boolean
   style?: object
 }
@@ -25,7 +25,7 @@ export default function TextInputField({
   password,
   style,
   disabled,
-  autoCapitalize = true,
+  autoCapitalize = "sentences",
 }: TextInputFieldProps) {
   const [isActive, setActive] = useState(false)
   return (
@@ -33,7 +33,7 @@ export default function TextInputField({
       placeholder={placeholder}
       secureTextEntry={password}
       multiline={textArea}
-      autoCapitalize={autoCapitalize ? "sentences" : "none"}
+      autoCapitalize={autoCapitalize}
       numberOfLines={textArea ? 4 : 1}
       textAlignVertical={textArea ? "top" : "auto"}
       style={[
