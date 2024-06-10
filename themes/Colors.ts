@@ -7,13 +7,20 @@ export const Colors = {
     primary: "#3539DB",
     primaryDark: "#32327E",
     secondary: "#E2E3FF",
+    disabled: {
+        light: "#C0C3CE",
+        dark: "#3D3F48"
+    },
+    success: {
+        color: "#2EC54F",
+    },
     error: {
-        primary: "#FF1A1A",
+        color: "#FF1A1A",
         light: "#FFEFEF",
     },
     info: {
-        primary: "#398EDC",
+        color: "#398EDC",
         light: "#F6FBFF",
     },
-    shadow: "#14152708",
+    shadow: "#14152706",
 }
