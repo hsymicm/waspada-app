@@ -1,15 +1,41 @@
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native"
 import StyledIconButton from "./StyledIconButton"
 import { XMarkIcon as CloseIcon } from "react-native-heroicons/solid"
-import { router } from "expo-router"
+import { router, usePathname } from "expo-router"
 import { Colors } from "../themes/Colors"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { ScrollView } from "react-native-gesture-handler"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useAuth } from "../contexts/AuthContext"
+import { useEffect, useState } from "react"
+
+function CustomDrawerItem({ label, name, path, currentRoute }) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => router.navigate(path)}
+      style={[
+        styles.drawerItemContainer,
+        currentRoute === name && { backgroundColor: Colors.lightGray },
+      ]}
+    >
+      <Text
+        style={[
+          styles.drawerItemText,
+          currentRoute === name && { color: Colors.accent },
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  )
+}
 
 export default function CustomDrawer({ navigation }) {
   const { currentUser, userSignOut } = useAuth()
+  const [currentRoute, setCurrentRoute] = useState(null)
+
+  const pathname = usePathname()
 
   const handleSignOut = async () => {
     try {
@@ -24,6 +50,12 @@ export default function CustomDrawer({ navigation }) {
     }
   }
 
+  useEffect(() => {
+    const route = pathname.split("/").pop()
+    if (route === "") return setCurrentRoute("index")
+    setCurrentRoute(route)
+  }, [pathname])
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }}>
       <View style={styles.drawerHeader}>
@@ -32,37 +64,37 @@ export default function CustomDrawer({ navigation }) {
           <CloseIcon color={Colors.white} />
         </StyledIconButton>
       </View>
-      <ScrollView contentContainerStyle={styles.drawerListContainer}>
-        <TouchableOpacity
-          onPress={() => router.navigate("/(app)")}
-          style={[
-            styles.drawerItemContainer,
-            true && { backgroundColor: Colors.lightGray },
-          ]}
-        >
-          <Text
-            style={[styles.drawerItemText, true && { color: Colors.accent }]}
-          >
-            Beranda
-          </Text>
-        </TouchableOpacity>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.drawerListContainer}
+      >
+        <CustomDrawerItem
+          label="Beranda"
+          name="index"
+          path="/(app)"
+          currentRoute={currentRoute}
+        />
         {currentUser ? (
           <>
+            <CustomDrawerItem
+              label="Lapor Kecelakaan"
+              name="addpost"
+              path="/(app)/(auth)/addpost"
+              currentRoute={currentRoute}
+            />
+            <CustomDrawerItem
+              label="Profil"
+              name="profile"
+              path="/(app)/(auth)/profile"
+              currentRoute={currentRoute}
+            />
             <TouchableOpacity
-              onPress={() => router.navigate("/(app)/(auth)/addpost")}
-              style={styles.drawerItemContainer}
-            >
-              <Text style={styles.drawerItemText}>Lapor Kecelakaan</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.drawerItemContainer}>
-              <Text style={styles.drawerItemText}>Profil</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={handleSignOut}
               style={styles.drawerItemContainer}
             >
               <Text
-                style={[styles.drawerItemText, { color: Colors.error.primary }]}
+                style={[styles.drawerItemText, { color: Colors.error.color }]}
               >
                 Keluar
               </Text>
@@ -71,17 +103,19 @@ export default function CustomDrawer({ navigation }) {
         ) : (
           <>
             <TouchableOpacity
+              activeOpacity={0.7}
               onPress={() => router.navigate("/signin")}
               style={styles.drawerItemContainer}
             >
               <Text style={styles.drawerItemText}>Masuk</Text>
             </TouchableOpacity>
             <TouchableOpacity
-            onPress={() => router.navigate("/signup")}
-            style={styles.drawerItemContainer}
-          >
-            <Text style={styles.drawerItemText}>Daftar</Text>
-          </TouchableOpacity>
+              activeOpacity={0.7}
+              onPress={() => router.navigate("/signup")}
+              style={styles.drawerItemContainer}
+            >
+              <Text style={styles.drawerItemText}>Daftar</Text>
+            </TouchableOpacity>
           </>
         )}
       </ScrollView>
