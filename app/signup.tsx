@@ -161,7 +161,7 @@ export default function SignUp() {
               setValue={(val) => {
                 setUsername(val.replace(/\s/g, ''))
               }}
-              autoCapitalize={false}
+              autoCapitalize="none"
               type="default"
               placeholder="Masukkan username"
             />
@@ -171,7 +171,7 @@ export default function SignUp() {
             <TextInputField
               value={email}
               setValue={setEmail}
-              autoCapitalize={false}
+              autoCapitalize="none"
               type="email-address"
               placeholder="Masukkan email"
             />
@@ -183,7 +183,7 @@ export default function SignUp() {
               setValue={(val) => {
                 setPassword(val.replace(/\s/g, ''))
               }}
-              autoCapitalize={false}
+              autoCapitalize="none"
               type="default"
               password
               placeholder="Masukkan password"
@@ -200,7 +200,7 @@ export default function SignUp() {
               setValue={(val) => {
                 setConfirmPassword(val.replace(/\s/g, ''))
               }}
-              autoCapitalize={false}
+              autoCapitalize="none"
               type="default"
               password
               placeholder="Masukkan ulang password"

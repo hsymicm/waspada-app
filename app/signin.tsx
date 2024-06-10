@@ -147,7 +147,7 @@ export default function SignIn() {
             <TextInputField
               value={email}
               setValue={setEmail}
-              autoCapitalize={false}
+              autoCapitalize="none"
               type="email-address"
               placeholder="Masukkan email"
             />
@@ -157,7 +157,7 @@ export default function SignIn() {
             <TextInputField
               value={password}
               setValue={setPassword}
-              autoCapitalize={false}
+              autoCapitalize="none"
               type="default"
               password
               placeholder="Masukkan password"
