@@ -18,6 +18,7 @@ export default function StyledIconButton({
 }: StyledIconButtonProps) {
   return (
     <TouchableOpacity
+      activeOpacity={0.7}
       onPress={onPress}
       style={[
         styles.button,
