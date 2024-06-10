@@ -49,7 +49,7 @@ export default function SearchFilter({
         {value === "" || !value ? (
           <SearchIcon size={20} color={Colors.accent} />
         ) : (
-          <TouchableOpacity onPress={() => setValue("")}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => setValue("")}>
             <XMarkIcon size={20} color={Colors.gray} />
           </TouchableOpacity>
         )}
