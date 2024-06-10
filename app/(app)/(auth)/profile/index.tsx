@@ -9,7 +9,7 @@ import {
 import { Colors } from "../../../../themes/Colors"
 import { useAuth } from "../../../../contexts/AuthContext"
 import { useEffect, useState } from "react"
-import { router, useLocalSearchParams, useNavigation } from "expo-router"
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
 import {
   ChevronRightIcon as ArrowIcon,
   ArchiveBoxIcon,
@@ -17,7 +17,6 @@ import {
   Cog6ToothIcon as Cog,
   ArrowLeftEndOnRectangleIcon as LogoutIcon,
 } from "react-native-heroicons/solid"
-import StyledIconButton from "../../../../components/StyledIconButton"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { getUserProfile } from "../../../../models/profileModel"
 
@@ -63,7 +62,6 @@ function ProfileMenu({
 export default function Profile() {
   const { currentUser, userSignOut } = useAuth()
   const [profile, setProfile] = useState(null)
-  const { _edit } = useLocalSearchParams()
 
   const navigation = useNavigation()
 
@@ -80,17 +78,21 @@ export default function Profile() {
       console.log(error)
     }
   }
-
-  useEffect(() => {
-    const fetchProfile = async () => {
+  
+  const fetchProfile = async () => {
+    try {
       const profile = await getUserProfile(currentUser)
       setProfile(profile)
+    } catch (error) {
+      console.log(error?.message || "Error, something happened")
     }
+  }
 
+  useFocusEffect(() => {
     if (currentUser) {
       fetchProfile()
     }
-  }, [currentUser])
+  })
 
   return (
     <ScrollView
