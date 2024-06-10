@@ -4,7 +4,7 @@ import {
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native"
 import { Colors } from "../../../themes/Colors"
 import {
@@ -12,17 +12,18 @@ import {
   ArrowsPointingOutIcon,
   ShareIcon,
   BookmarkIcon,
-  ChevronUpIcon as UpVoteIcon,
-  ChevronDownIcon as DownVoteIcon,
 } from "react-native-heroicons/solid"
 import StyledIconButton from "../../../components/StyledIconButton"
 import { useEffect, useState } from "react"
-import { formatRatingCounter } from "../../../libs/utils"
-import { useLocalSearchParams } from "expo-router"
+import { kMToLongitudes } from "../../../libs/utils"
+import { useLocalSearchParams, useNavigation } from "expo-router"
 import { getReportDetail } from "../../../models/reportModel"
 import LoadingSkeleton from "../../../components/Skeleton/CardSkeleton"
 import TextSkeleton from "../../../components/Skeleton/TextSkeleton"
 import ImageModal from "../../../components/Modal/ImageModal"
+import { useAuth } from "../../../contexts/AuthContext"
+import VoteCounter from "../../../components/VoteCounter"
+import MapThumbnail from "../../../components/MapThumbnail"
 
 function DetailPost() {
   const { id } = useLocalSearchParams()
@@ -31,11 +32,19 @@ function DetailPost() {
   const [isLoading, setLoading] = useState(false)
   const [imageModalVisible, setImageModalVisible] = useState(false)
 
+  const { currentUser } = useAuth()
+  const navigation = useNavigation()
+
   const fetchReportDetail = async (id: any) => {
     setLoading(true)
-    const data = await getReportDetail(id)
+
+    try {
+      const data = await getReportDetail(id)
+      setReportDetail(data)
+    } catch (error) {
+      console.log(error)
+    }
     setLoading(false)
-    setReportDetail(data)
   }
 
   useEffect(() => {
@@ -55,7 +64,7 @@ function DetailPost() {
           <ImageModal
             imageModalVisible={imageModalVisible}
             setImageModalVisible={setImageModalVisible}
-            url={reportDetail?.url}
+            url={reportDetail?.imageUrl}
           />
           {!isLoading && reportDetail?.many && (
             <View style={styles.headerNotification}>
@@ -65,12 +74,12 @@ function DetailPost() {
               </Text>
             </View>
           )}
-          {!isLoading && reportDetail?.url ? (
+          {!isLoading && reportDetail?.imageUrl ? (
             <View style={styles.imageContainer}>
               <Image
                 style={styles.imageContent}
                 source={{
-                  uri: reportDetail.url,
+                  uri: reportDetail.imageUrl,
                 }}
               />
               <StyledIconButton
@@ -96,13 +105,30 @@ function DetailPost() {
                 ) : (
                   <TextSkeleton isLoading={isLoading} numberOfLines={2} />
                 )}
-                <TouchableOpacity onPress={() => setExpand(!isExpand)}>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => setExpand(!isExpand)}>
                   <Text style={styles.detailExpand}>
                     {isExpand ? "Lihat lebih sedikit" : "Lihat selengkapnya"}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
+            {reportDetail?.latitude && reportDetail?.longitude && (
+              <View style={styles.detailInfo}>
+                <Text style={styles.detailLabel}>Lokasi</Text>
+                <MapThumbnail
+                  initialRegion={{
+                    latitude: parseFloat(reportDetail.latitude),
+                    longitude: parseFloat(reportDetail.longitude),
+                    latitudeDelta: 0.00001,
+                    longitudeDelta: kMToLongitudes(
+                      1.0,
+                      parseFloat(reportDetail.latitude)
+                    ),
+                  }}
+                />
+                <Text style={styles.detailParagraph}>{reportDetail.address}</Text>
+              </View>
+            )}
             <View style={styles.detailInfo}>
               <Text style={styles.detailLabel}>Waktu</Text>
               {!isLoading && reportDetail ? (
@@ -117,32 +143,18 @@ function DetailPost() {
       <View style={styles.footerContainer}>
         <View style={styles.footerCapsule}>
           <View style={styles.actionContainer}>
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => {}}>
               <ShareIcon size={18} color={Colors.white} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => {}}>
               <BookmarkIcon size={18} color={Colors.white} />
             </TouchableOpacity>
           </View>
-          <View style={styles.ratingContainer}>
-            <StyledIconButton
-              onPress={() => {}}
-              style={{ padding: 4 }}
-              variant="secondary"
-              width={24}
-            >
-              <UpVoteIcon size={18} color={Colors.primaryDark} />
-            </StyledIconButton>
-            <Text style={styles.counter}>{formatRatingCounter(reportDetail?.rating || 0)}</Text>
-            <StyledIconButton
-              onPress={() => {}}
-              style={{ padding: 4 }}
-              variant="secondary"
-              width={24}
-            >
-              <DownVoteIcon size={18} color={Colors.primaryDark} />
-            </StyledIconButton>
-          </View>
+          <VoteCounter
+            reportId={id}
+            userId={currentUser?.uid}
+            rating={reportDetail?.voteCounter}
+          />
         </View>
       </View>
     </View>
