@@ -10,9 +10,10 @@ import { useState, useRef } from "react"
 import { handleAuthErrorMessage } from "../libs/utils"
 
 import { useAuth } from "../contexts/AuthContext"
-import { getDoc, doc, writeBatch } from "firebase/firestore"
+import { getDoc, doc, writeBatch, serverTimestamp } from "firebase/firestore"
 
 import { FIREBASE_DB as db } from "../firebase.config"
+import { StackActions } from "@react-navigation/native"
 
 export default function SignUp() {
   const [username, setUsername] = useState("")
@@ -73,7 +74,7 @@ export default function SignUp() {
 
       const { user } = await userSignUp(email, password)
 
-      const createdAt = Date.now()
+      const createdAt = serverTimestamp()
       const updatedAt = createdAt
 
       const userId = user.uid
@@ -101,11 +102,16 @@ export default function SignUp() {
       setPassword("")
       setConfirmPassword("")
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "signin", params: { "_signup": "true" }}],
+      if (navigation.canGoBack()) {
+        navigation.dispatch(StackActions.popToTop())
+      }
+      const path: any = "/signin?_signup=true"
+      router.replace(path)
+      // navigation.reset({
+      //   index: 0,
+      //   routes: [{ name: "signin", params: { "_signup": "true" }}],
 
-      })
+      // })
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
       console.log(e)
@@ -118,6 +124,7 @@ export default function SignUp() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
         ref={_scrollView}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
         style={{
           position: "relative",
@@ -151,7 +158,10 @@ export default function SignUp() {
             <Text style={styles.inputLabel}>Username</Text>
             <TextInputField
               value={username}
-              setValue={setUsername}
+              setValue={(val) => {
+                setUsername(val.replace(/\s/g, ''))
+              }}
+              autoCapitalize={false}
               type="default"
               placeholder="Masukkan username"
             />
@@ -161,6 +171,7 @@ export default function SignUp() {
             <TextInputField
               value={email}
               setValue={setEmail}
+              autoCapitalize={false}
               type="email-address"
               placeholder="Masukkan email"
             />
@@ -169,7 +180,10 @@ export default function SignUp() {
             <Text style={styles.inputLabel}>Password</Text>
             <TextInputField
               value={password}
-              setValue={setPassword}
+              setValue={(val) => {
+                setPassword(val.replace(/\s/g, ''))
+              }}
+              autoCapitalize={false}
               type="default"
               password
               placeholder="Masukkan password"
@@ -183,7 +197,10 @@ export default function SignUp() {
             <Text style={styles.inputLabel}>Konfirmasi Password</Text>
             <TextInputField
               value={confirmPassword}
-              setValue={setConfirmPassword}
+              setValue={(val) => {
+                setConfirmPassword(val.replace(/\s/g, ''))
+              }}
+              autoCapitalize={false}
               type="default"
               password
               placeholder="Masukkan ulang password"
