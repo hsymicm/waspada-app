@@ -22,5 +22,5 @@ export const Colors = {
         color: "#398EDC",
         light: "#F6FBFF",
     },
-    shadow: "#14152706",
+    shadow: "#14152710",
 }
