@@ -31,7 +31,7 @@ export default function StyledButton({
   style,
   textStyle,
   disabled,
-  activeOpacity,
+  activeOpacity = 0.7,
   loading,
   variant = "primary",
   size = "normal",
@@ -53,6 +53,7 @@ export default function StyledButton({
       style={[
         variant === "primary" ? styles.primaryButton : styles.secondaryButton,
         size === "normal" ? styles.sizeNormal : styles.sizeSmall,
+        disabled && { backgroundColor: Colors.disabled.light },
         styles.button,
         style,
       ]}
@@ -64,6 +65,7 @@ export default function StyledButton({
         <Text
           style={[
             variant === "primary" ? styles.primaryText : styles.secondaryText,
+            disabled && { color: Colors.disabled.dark },
             styles.text,
             textStyle,
           ]}
