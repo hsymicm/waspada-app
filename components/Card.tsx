@@ -1,5 +1,5 @@
+import { Image as ExpoImage } from "expo-image"
 import {
-  Image,
   View,
   Text,
   StyleSheet,
@@ -9,15 +9,15 @@ import {
   ShareIcon,
   BookmarkIcon,
   MapPinIcon as Pin,
-  ChevronUpIcon as UpVoteIcon,
-  ChevronDownIcon as DownVoteIcon,
 } from "react-native-heroicons/solid"
+import {
+  BookmarkIcon as BookmarkIconOutline
+} from "react-native-heroicons/outline"
 import { Colors } from "../themes/Colors"
 import { LinearGradient } from "expo-linear-gradient"
-import StyledIconButton from "./StyledIconButton"
-import { memo } from "react"
-import { formatRatingCounter } from "../libs/utils"
 import { router } from "expo-router"
+import VoteCounter from "./VoteCounter"
+import { useAuth } from "../contexts/AuthContext"
 
 interface CardProps {
   id: string
@@ -38,6 +38,8 @@ function Card({
   url,
   reportedAlot,
 }: CardProps) {
+  const { currentUser } = useAuth()
+
   return (
     <TouchableWithoutFeedback
       onPress={() => router.navigate(`/(app)/detail/${id}`)}
@@ -79,37 +81,31 @@ function Card({
                 onPress={() => console.log("Share Pressed")}
               >
                 <View style={{ padding: 8 }}>
-                  <ShareIcon size={16} color={Colors.white} />
+                  <ShareIcon size={18} color={Colors.white} />
                 </View>
               </TouchableWithoutFeedback>
               <TouchableWithoutFeedback
                 onPress={() => console.log("Bookmark Pressed")}
               >
                 <View style={{ padding: 8 }}>
-                  <BookmarkIcon size={16} color={Colors.white} />
+                  <BookmarkIconOutline size={18} color={Colors.white} />
                 </View>
               </TouchableWithoutFeedback>
             </View>
-            <View style={styles.ratingContainer}>
-              <StyledIconButton
-                style={{ padding: 3 }}
-                variant="secondary"
-                width={24}
-              >
-                <UpVoteIcon size={16} color={Colors.primaryDark} />
-              </StyledIconButton>
-              <Text>{formatRatingCounter(rating)}</Text>
-              <StyledIconButton
-                style={{ padding: 3 }}
-                variant="secondary"
-                width={24}
-              >
-                <DownVoteIcon size={16} color={Colors.primaryDark} />
-              </StyledIconButton>
-            </View>
+            <VoteCounter
+              card
+              reportId={id}
+              userId={currentUser?.uid}
+              rating={rating}
+            />
           </View>
         </LinearGradient>
-        <Image source={{ uri: url }} style={styles.image} />
+        <ExpoImage
+          source={url}
+          contentFit="cover"
+          style={styles.image}
+          transition={500}
+        />
       </View>
     </TouchableWithoutFeedback>
   )
@@ -179,7 +175,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
   },
   description: {
-    // flex: 1,
     fontFamily: "Nunito-Regular",
     fontSize: 16,
     color: Colors.white,
@@ -213,7 +208,7 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    resizeMode: "cover",
+    // resizeMode: "cover",
     position: "absolute",
     left: 0,
     top: 0,
