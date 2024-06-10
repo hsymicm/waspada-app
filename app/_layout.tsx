@@ -5,8 +5,9 @@ import * as SplashScreen from "expo-splash-screen"
 
 import { AppLoader } from "../components/AppLoader"
 import { AuthProvider } from "../contexts/AuthContext"
-import { StatusBar } from "expo-status-bar"
-import { Colors } from "../themes/Colors"
+import { Camera } from "expo-camera"
+import * as Location from "expo-location"
+import * as ImagePicker from "expo-image-picker"
 
 export const unstable_settings = {
   initialRouteName: "signin",
@@ -30,6 +31,10 @@ export default function RootLayout() {
     const prepare = async () => {
       if (fontsLoaded && !fontError) {
         try {
+          await Location.requestForegroundPermissionsAsync()
+          await Camera.requestCameraPermissionsAsync()
+          await ImagePicker.requestMediaLibraryPermissionsAsync()
+
           await new Promise((resolve) => setTimeout(resolve, 200))
           setAppReady(true)
         } catch (e) {
@@ -56,8 +61,11 @@ export default function RootLayout() {
               <Stack.Screen name="(app)" options={{ headerShown: false }} />
               <Stack.Screen name="signin" options={{ headerShown: false }} />
               <Stack.Screen name="signup" options={{ headerShown: false }} />
-              <Stack.Screen name="resetpassword" options={{ headerShown: false }} />
-           </Stack>
+              <Stack.Screen
+                name="resetpassword"
+                options={{ headerShown: false }}
+              />
+            </Stack>
           </AuthProvider>
         </AppLoader>
       )}
