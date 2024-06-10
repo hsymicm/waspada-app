@@ -1,7 +1,10 @@
 import { ScrollView, View, Text, Image, StyleSheet } from "react-native"
 import { Colors } from "../../../../themes/Colors"
 import { useEffect, useState } from "react"
-import { getUserProfile } from "../../../../models/profileModel"
+import {
+  getUserProfile,
+  updateUserProfile,
+} from "../../../../models/profileModel"
 import { useAuth } from "../../../../contexts/AuthContext"
 import { TouchableOpacity } from "react-native-gesture-handler"
 import { PhotoIcon, PencilSquareIcon } from "react-native-heroicons/solid"
@@ -16,7 +19,6 @@ export default function EditProfile() {
   const [profile, setProfile] = useState(null)
   const [editProfile, setEditProfile] = useState(null)
   const [isLoading, setLoading] = useState(true)
-  const [result, setResult] = useState(null)
 
   const { currentUser } = useAuth()
 
@@ -32,28 +34,59 @@ export default function EditProfile() {
     }
   }
 
+  const fetchProfile = async () => {
+    setLoading(true)
+    const res = await getUserProfile(currentUser)
+    setProfile(res)
+    setEditProfile({
+      description: res.description,
+      displayName: res.displayName,
+      profilePicture: null,
+    })
+    setLoading(false)
+  }
+
+  const getUpdatedFields = (profile: any, editedProfile: any) => {
+    const updatedFields: any = {}
+
+    if (editedProfile.profilePicture !== profile.profilePicture) {
+      updatedFields.profilePicture = editedProfile.profilePicture
+    }
+
+    if (editedProfile.displayName !== profile.displayName) {
+      updatedFields.displayName = editedProfile.displayName
+    }
+
+    if (editedProfile.description !== profile.description) {
+      updatedFields.description = editedProfile.description
+    }
+
+    return updatedFields
+  }
+
   const checkChanges = () => {
     if (isLoading) return false
-    
-    return (
-      editProfile.description !== profile.description ||
-      editProfile.displayName !== profile.displayName ||
-      editProfile.profilePicture !== profile.profilePicture
-    )
+
+    const updatedFields = getUpdatedFields(profile, editProfile)
+
+    return Object.keys(updatedFields).length !== 0
+  }
+
+  const handleSubmit = async () => {
+    if (!checkChanges()) {
+      throw new Error("Error, nothing changed")
+    }
+
+    try {
+      const updatedFields = getUpdatedFields(profile, editProfile)
+      await updateUserProfile(currentUser, updatedFields)
+      await fetchProfile()
+    } catch (error) {
+      console.log(error?.message || "Error, something happened")
+    }
   }
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const res = await getUserProfile(currentUser)
-      setProfile(res)
-      setEditProfile({
-        description: res.description,
-        displayName: res.displayName,
-        profilePicture: null,
-      })
-      setLoading(false)
-    }
-
     if (currentUser) {
       fetchProfile()
     }
@@ -105,6 +138,7 @@ export default function EditProfile() {
                 setValue={(val) =>
                   setEditProfile({ ...editProfile, displayName: val })
                 }
+                autoCapitalize="words"
                 placeholder="Masukkan nama Anda"
               />
             ) : (
@@ -182,7 +216,7 @@ export default function EditProfile() {
         <View style={styles.footerContainer}>
           <StyledButton
             loading
-            // onPress={handleSubmit}
+            onPress={handleSubmit}
             title="Simpan perubahan"
             disabled={!checkChanges()}
           />
