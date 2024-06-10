@@ -8,7 +8,7 @@ import {
   ArrowsPointingOutIcon,
 } from "react-native-heroicons/solid"
 
-export default function MapThumbnail({ initialRegion }) {
+export default function MapThumbnail({ initialRegion, onExpand }) {
   const mapRef = useRef(null)
 
   const centerMap = () => {
@@ -42,7 +42,7 @@ export default function MapThumbnail({ initialRegion }) {
         }}
       >
         <StyledIconButton
-          onPress={() => {}}
+          onPress={onExpand}
           width={36}
           style={{
             backgroundColor: "#00000060",
