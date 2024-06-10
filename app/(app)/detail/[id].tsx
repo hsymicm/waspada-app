@@ -24,13 +24,17 @@ import ImageModal from "../../../components/Modal/ImageModal"
 import { useAuth } from "../../../contexts/AuthContext"
 import VoteCounter from "../../../components/VoteCounter"
 import MapThumbnail from "../../../components/MapThumbnail"
+import MapModal from "../../../components/Modal/MapModal"
 
 function DetailPost() {
   const { id } = useLocalSearchParams()
   const [isExpand, setExpand] = useState(false)
   const [reportDetail, setReportDetail] = useState(null)
+  const [initialRegion, setInitialRegion] = useState(null)
   const [isLoading, setLoading] = useState(false)
+
   const [imageModalVisible, setImageModalVisible] = useState(false)
+  const [mapModalVisible, setMapModalVisible] = useState(false)
 
   const { currentUser } = useAuth()
   const navigation = useNavigation()
@@ -39,7 +43,13 @@ function DetailPost() {
     setLoading(true)
 
     try {
-      const data = await getReportDetail(id)
+      const data: any = await getReportDetail(id)
+      setInitialRegion({
+        latitude: parseFloat(data.latitude),
+        longitude: parseFloat(data.longitude),
+        latitudeDelta: 0.00001,
+        longitudeDelta: kMToLongitudes(1.0, parseFloat(data.latitude)),
+      })
       setReportDetail(data)
     } catch (error) {
       console.log(error)
@@ -65,6 +75,11 @@ function DetailPost() {
             imageModalVisible={imageModalVisible}
             setImageModalVisible={setImageModalVisible}
             url={reportDetail?.imageUrl}
+          />
+          <MapModal
+            visible={mapModalVisible}
+            setVisible={setMapModalVisible}
+            initialRegion={initialRegion}
           />
           {!isLoading && reportDetail?.many && (
             <View style={styles.headerNotification}>
@@ -105,7 +120,10 @@ function DetailPost() {
                 ) : (
                   <TextSkeleton isLoading={isLoading} numberOfLines={2} />
                 )}
-                <TouchableOpacity activeOpacity={0.7} onPress={() => setExpand(!isExpand)}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setExpand(!isExpand)}
+                >
                   <Text style={styles.detailExpand}>
                     {isExpand ? "Lihat lebih sedikit" : "Lihat selengkapnya"}
                   </Text>
@@ -116,17 +134,12 @@ function DetailPost() {
               <View style={styles.detailInfo}>
                 <Text style={styles.detailLabel}>Lokasi</Text>
                 <MapThumbnail
-                  initialRegion={{
-                    latitude: parseFloat(reportDetail.latitude),
-                    longitude: parseFloat(reportDetail.longitude),
-                    latitudeDelta: 0.00001,
-                    longitudeDelta: kMToLongitudes(
-                      1.0,
-                      parseFloat(reportDetail.latitude)
-                    ),
-                  }}
+                  onExpand={() => setMapModalVisible(true)}
+                  initialRegion={initialRegion}
                 />
-                <Text style={styles.detailParagraph}>{reportDetail.address}</Text>
+                <Text style={styles.detailParagraph}>
+                  {reportDetail.address}
+                </Text>
               </View>
             )}
             <View style={styles.detailInfo}>
