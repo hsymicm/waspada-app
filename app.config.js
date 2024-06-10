@@ -5,7 +5,7 @@ module.exports = {
     version: "1.0.0",
     extra: {
       eas: {
-        projectId: "af1f06cf-44d9-4f1c-98d3-3379b448e520"
+        projectId: process.env.EAS_PROJECT_ID
       }
     },
     orientation: "portrait",
@@ -31,7 +31,7 @@ module.exports = {
       package: "com.waspada.waspada",
       config: {
         googleMaps: {
-          apiKey: "AIzaSyDt7cHR5wMyTjzuvBncS4UrtxbJ_-4UsXg"
+          apiKey: process.env.MAPS_API_KEY
         }
       },
       adaptiveIcon: {
