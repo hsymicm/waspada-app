@@ -14,7 +14,7 @@ export function AuthNotification({ message, isError = false, style = null }) {
       <Text style={[styles.text, isError ? styles.textError : styles.textInfo]}>
         {message}
       </Text>
-      {isError && <ErrorIcon size={18} color={Colors.error.primary} />}
+      {isError && <ErrorIcon size={18} color={Colors.error.color} />}
     </View>
   )
 }
@@ -33,20 +33,20 @@ const styles = StyleSheet.create({
   },
   containerError: {
     backgroundColor: Colors.error.light,
-    borderColor: Colors.error.primary,
+    borderColor: Colors.error.color,
   },
   containerInfo: {
     backgroundColor: Colors.info.light,
-    borderColor: Colors.info.primary,
+    borderColor: Colors.info.color,
   },
   text: {
     fontFamily: "Nunito-Regular",
     fontSize: 16,
   },
   textError: {
-    color: Colors.error.primary,
+    color: Colors.error.color,
   },
   textInfo: {
-    color: Colors.info.primary,
+    color: Colors.info.color,
   },
 })
