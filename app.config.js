@@ -1,11 +1,11 @@
 module.exports = {
   expo: {
-    name: "waspada-app",
+    name: "Waspada",
     slug: "waspada-app",
     version: "1.0.0",
     extra: {
       eas: {
-        projectId: process.env.EAS_PROJECT_ID
+        projectId: "af1f06cf-44d9-4f1c-98d3-3379b448e520"
       }
     },
     orientation: "portrait",
@@ -36,13 +36,8 @@ module.exports = {
       },
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#484cfb"
       }
-    },
-    web: {
-      bundler: "metro",
-      output: "static",
-      favicon: "./assets/favicon.png"
     },
     plugins: [
       "expo-router",
