@@ -8,7 +8,7 @@ export default function ProfileLayout() {
         name="index"
         options={{
           header: ({ navigation }) => (
-            <Header title="Profil" navigation={navigation} />
+            <Header title="Profil" navigation={navigation} canGoBack={false}/>
           ),
         }}
       />

@@ -38,11 +38,12 @@ export default function AppLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
+        initialRouteName="index"
         screenOptions={{
           drawerPosition: "right",
         }}
-        drawerContent={({ navigation, state }) => (
-          <CustomDrawer navigation={navigation} state={state} />
+        drawerContent={({ navigation }) => (
+          <CustomDrawer navigation={navigation} />
         )}
       >
         <Drawer.Screen
@@ -76,6 +77,9 @@ export default function AppLayout() {
           name="(auth)"
           options={{
             headerShown: false,
+            // header: ({ navigation }) => (
+            //   <Header title="Detail" navigation={navigation} />
+            // ),
           }}
         />
       </Drawer>
