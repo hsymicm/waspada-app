@@ -11,11 +11,6 @@ import {
 export default function MapThumbnail({ initialRegion, onExpand }) {
   const mapRef = useRef(null)
 
-  const centerMap = () => {
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(initialRegion, 1000) // Duration in ms
-    }
-  }
   return (
     <View style={styles.mapContainer}>
       <MapView
@@ -23,6 +18,7 @@ export default function MapThumbnail({ initialRegion, onExpand }) {
         initialRegion={initialRegion}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
+        scrollEnabled={false}
       >
         <MapMarker
           coordinate={{
@@ -32,36 +28,19 @@ export default function MapThumbnail({ initialRegion, onExpand }) {
           title={"Lokasi Laporan"}
         />
       </MapView>
-      <View
+      <StyledIconButton
+        onPress={onExpand}
+        width={36}
         style={{
+          backgroundColor: "#00000060",
+          borderRadius: 12,
           position: "absolute",
           top: 16,
           right: 16,
-          display: "flex",
-          gap: 8,
         }}
       >
-        <StyledIconButton
-          onPress={onExpand}
-          width={36}
-          style={{
-            backgroundColor: "#00000060",
-            borderRadius: 12,
-          }}
-        >
-          <ArrowsPointingOutIcon size={18} color={Colors.white} />
-        </StyledIconButton>
-        <StyledIconButton
-          onPress={centerMap}
-          width={36}
-          style={{
-            backgroundColor: "#00000060",
-            borderRadius: 12,
-          }}
-        >
-          <ArrowPathIcon size={18} color={Colors.white} />
-        </StyledIconButton>
-      </View>
+        <ArrowsPointingOutIcon size={18} color={Colors.white} />
+      </StyledIconButton>
     </View>
   )
 }
