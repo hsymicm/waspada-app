@@ -122,8 +122,9 @@ const styles = StyleSheet.create({
 
   voteCounter: {
     fontFamily: "Nunito-Regular",
-    fontSize: 16,
+    fontSize: 18,
     color: Colors.white,
+    paddingHorizontal: 4
   },
 
   voteContainerCard: {
