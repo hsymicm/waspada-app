@@ -14,6 +14,8 @@ import {
   runTransaction,
   startAt,
   endAt,
+  writeBatch,
+  arrayUnion,
 } from "firebase/firestore"
 import {
   FIREBASE_DB as db,
@@ -26,7 +28,6 @@ import {
   geohashQueryBounds,
 } from "geofire-common"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
-// import { Image as ImageCompressor } from "react-native-compressor"
 
 export const getReports = {
   firstBatch: async function () {
@@ -63,6 +64,65 @@ export const getReports = {
       const dataQuery = query(
         reportRef,
         orderBy("date", "desc"),
+        startAfter(key),
+        limit(10)
+      )
+
+      const dataSnapshot = await getDocs(dataQuery)
+      const lastVisible = dataSnapshot.docs[dataSnapshot.docs.length - 1]
+
+      const arr = []
+
+      dataSnapshot.forEach((doc) => {
+        const reportId = doc.id
+        const data = doc.data()
+        const date = formatElapsedTime(data.date)
+        const obj = { uid: reportId, ...data, date }
+        arr.push(obj)
+      })
+
+      return { data: arr, lastKey: lastVisible }
+    } catch (error) {
+      throw new Error(error.message || "An error has occured")
+    }
+  },
+}
+
+export const getPopularReports = {
+  firstBatch: async function () {
+    try {
+      const reportRef = collection(db, "reports")
+      const dataQuery = query(reportRef, orderBy("voteCounter", "desc"), limit(10))
+
+      const dataSnapshot = await getDocs(dataQuery)
+      const lastVisible = dataSnapshot.docs[dataSnapshot.docs.length - 1]
+
+      const arr = []
+
+      dataSnapshot.forEach((doc) => {
+        const reportId = doc.id
+        const data = doc.data()
+        const date = formatElapsedTime(data.date)
+        const obj = { uid: reportId, ...data, date }
+        arr.push(obj)
+      })
+
+      return { data: arr, lastKey: lastVisible }
+    } catch (error) {
+      throw new Error(error.message || "An error has occured")
+    }
+  },
+
+  nextBatch: async function (key: string) {
+    if (!key) {
+      throw new Error("Error, key is missing or invalid")
+    }
+
+    try {
+      const reportRef = collection(db, "reports")
+      const dataQuery = query(
+        reportRef,
+        orderBy("voteCounter", "desc"),
         startAfter(key),
         limit(10)
       )
@@ -208,10 +268,6 @@ export const setReport = async (
   try {
     const hash = geohashForLocation([latitude, longitude])
 
-    // const compressResult = await ImageCompressor.compress(image, {})
-
-    // console.log(compressResult)
-
     const response = await fetch(image)
 
     if (!response.ok) {
@@ -226,9 +282,18 @@ export const setReport = async (
     const storageSnapshot = await uploadBytes(storageRef, blob)
     const downloadUrl = await getDownloadURL(storageSnapshot.ref)
 
-    const reportRef = collection(db, "reports")
-    await addDoc(reportRef, {
-      userId: currentUser.uid,
+    const batch = writeBatch(db)
+
+    const userId = currentUser.uid
+
+    const reportCollection = collection(db, "reports")
+    const reportRef = doc(reportCollection) 
+    const reportId = reportRef.id
+
+    const userRef = doc(db, "users", userId)
+
+    batch.set(reportRef, {
+      userId,
       description,
       longitude,
       latitude,
@@ -244,6 +309,12 @@ export const setReport = async (
       voteCounter: 0,
       imageUrl: downloadUrl,
     })
+
+    batch.update(userRef, {
+      reportHistory: arrayUnion(reportId)
+    })
+
+    await batch.commit();
   } catch (error) {
     throw new Error(error.message || "An error has occured")
   }
