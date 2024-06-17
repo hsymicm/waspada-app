@@ -7,14 +7,18 @@ interface TextSkeletonProps {
   lineWidth?: number
   lineHeight?: number
   numberOfLines?: number
+  style?: object
+  borderRadius?: number
 }
 
 const TextSkeleton = ({
   isLoading,
+  style,
+  borderRadius,
   lineWidth = null,
   lineHeight = 18,
   numberOfLines = 1,
-}) => {
+}: TextSkeletonProps) => {
   const pulseAnimation = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -66,13 +70,14 @@ const TextSkeleton = ({
           key={index}
           style={[
             { width: lineWidth || numberOfLines - 1 === index ? "60%" : "100%", height: lineHeight, borderRadius: 4 },
+            style,
             animatedStyle,
           ]}
         >
           <LinearGradient
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
-            style={{ width: "100%", height: "100%", borderRadius: 4 }}
+            style={{ width: "100%", height: "100%", borderRadius: borderRadius || 4 }}
             colors={["#9FA3B8", "#D0D4E3"]}
           />
         </Animated.View>
