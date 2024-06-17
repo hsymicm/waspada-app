@@ -5,45 +5,55 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Colors } from "../themes/Colors"
-import { useNavigation } from "@react-navigation/native"
 import {
   ArrowLeftIcon as Arrow,
   Bars3Icon as Hamburger,
 } from "react-native-heroicons/solid"
 import { Shadow } from "react-native-shadow-2"
+import { router } from "expo-router"
+import { useState } from "react"
 
 interface HeaderProps {
   children?: any
   title: string
   navigation: any
+  route?: any
   titleShown?: boolean
+  canGoBack?: boolean
   searchBarShown?: boolean
   extraBarShown?: boolean
   backButtonShown?: boolean
-  value?: string
-  setValue?: any
 }
 
 export default function Header({
   children,
   title,
   navigation,
+  canGoBack = true,
   titleShown = true,
   searchBarShown = false,
-  extraBarShown = false,
   backButtonShown = true,
-  value,
-  setValue,
 }: HeaderProps) {
-  const navigator = useNavigation()
+  const [value, setValue] = useState("")
+
+  const handleBackPress = () => {
+    if (canGoBack) {
+      navigation.goBack()
+    } else {
+      router.navigate("(app)")
+    }
+  }
+
+  const handleSearchSubmit = () => {
+    router.setParams({ _search: value, _filter: "near" })
+    setValue("")
+  }
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ overflow: "visible" }}>
       <Shadow
         style={{ width: "100%" }}
         offset={[0, 2]}
@@ -54,7 +64,7 @@ export default function Header({
           <View style={styles.columnContainer}>
             <View style={styles.rowContainer}>
               {backButtonShown && !searchBarShown && (
-                <StyledIconButton onPress={() => navigator.goBack()} variant="secondary" width={46}>
+                <StyledIconButton onPress={handleBackPress} variant="secondary" width={46}>
                   <Arrow color={Colors.primaryDark} />
                 </StyledIconButton>
               )}
@@ -62,6 +72,7 @@ export default function Header({
                 <SearchFilter
                   value={value}
                   setValue={setValue}
+                  onSubmit={handleSearchSubmit}
                   placeholder="Cari lokasi"
                 />
               )}
