@@ -1,34 +1,42 @@
-import { View, Text, FlatList } from "react-native"
+import { View, FlatList, RefreshControl } from "react-native"
 import { Colors } from "../../../../themes/Colors"
 import FlatCard from "../../../../components/FlatCard"
+import TextSkeleton from "../../../../components/Skeleton/TextSkeleton"
+import { useFocusEffect } from "expo-router"
+import { useCallback, useState } from "react"
+import { useAuth } from "../../../../contexts/AuthContext"
+import { getArchiveReports } from "../../../../models/profileModel"
 
-export default function Profile() {
-  const data = [
-    {
-      id: 1,
-      image: "https://images.unsplash.com/photo-1517586979036-b7d1e86b3345",
-      location: "Boncang, Tanah Abang",
-      date: "Mei 14, 2024 - 1:18 PM",
-      description:
-        "Vulputate mi sit amet mauris commodo quis imperdiet massa tincidunt nunc",
-    },
-    {
-      id: 2,
-      image: "https://images.unsplash.com/photo-1517586979036-b7d1e86b3345",
-      location: "Boncang, Tanah Abang",
-      date: "Mei 14, 2024 - 1:18 PM",
-      description:
-        "Vulputate mi sit amet mauris commodo quis imperdiet massa tincidunt nunc",
-    },
-    {
-      id: 3,
-      image: "https://images.unsplash.com/photo-1517586979036-b7d1e86b3345",
-      location: "Boncang, Tanah Abang",
-      date: "Mei 14, 2024 - 1:18 PM",
-      description:
-        "Vulputate mi sit amet mauris commodo quis imperdiet massa tincidunt nunc",
-    },
-  ]
+export default function PostArchive() {
+  const [data, setData] = useState([])
+  const [isLoading, setLoading] = useState(true)
+  const [isRefresh, setRefresh] = useState(false)
+
+  const { currentUser } = useAuth()
+
+  const onRefresh = async () => {
+    setRefresh(true)
+    setData([])
+    await fetchArchive()
+    setRefresh(false)
+  }
+
+  const fetchArchive = async () => {
+    try {
+      setLoading(true)
+      const result = await getArchiveReports(currentUser)
+      setData(result)
+      setLoading(false)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchArchive()
+    }, [])
+  )
 
   return (
     <FlatList
@@ -40,16 +48,38 @@ export default function Profile() {
         gap: 16,
       }}
       data={data}
+      keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
         <FlatCard
-          id={1}
-          image={item.image}
+          id={item.id}
+          image={item.imageUrl}
           date={item.date}
-          location={item.location}
+          location={`${item.subdistrict}, ${item.district}`}
           description={item.description}
         />
       )}
-      keyExtractor={(item) => item.id}
+      ListFooterComponent={() => (
+        <View style={{ gap: 16 }}>
+          <TextSkeleton
+            style={{ width: "100%", height: 102 }}
+            borderRadius={16}
+            isLoading={isLoading}
+          />
+          <TextSkeleton
+            style={{ width: "100%", height: 102 }}
+            borderRadius={16}
+            isLoading={isLoading}
+          />
+        </View>
+      )}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefresh}
+          onRefresh={onRefresh}
+          colors={[Colors.accent]}
+          progressBackgroundColor={Colors.white}
+        />
+      }
     />
   )
 }
