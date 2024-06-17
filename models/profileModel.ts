@@ -17,11 +17,13 @@ import {
   arrayUnion,
   arrayRemove,
   where,
+  documentId,
 } from "firebase/firestore"
 import {
   FIREBASE_DB as db,
   FIREBASE_STORAGE as storage,
 } from "../firebase.config"
+import { formatTimestamp } from "../libs/utils"
 
 export const handleArchiveReport = async (
   currentUser: any,
@@ -50,8 +52,6 @@ export const handleArchiveReport = async (
       await updateDoc(userRef, {
         archivedReports: arrayUnion(reportId),
       })
-
-      console.log("Report archived successfully")
     } else if (action === "unarchive") {
       await updateDoc(reportRef, {
         archivedBy: arrayRemove(userId),
@@ -60,8 +60,6 @@ export const handleArchiveReport = async (
       await updateDoc(userRef, {
         archivedReports: arrayRemove(reportId),
       })
-
-      console.log("Report unarchived successfully")
     } else {
       throw new Error("Invalid action. Use 'archive' or 'unarchive'.")
     }
@@ -93,15 +91,91 @@ export const getArchiveReports = async (currentUser: any) => {
     }
 
     const reportsRef = collection(db, "reports")
-    const q = query(reportsRef, where("id", "in", archivedReportsId))
+    const q = query(reportsRef, where(documentId(), "in", archivedReportsId))
     const querySnapshot = await getDocs(q)
 
-    const archivedReports = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
+    const archivedReports = querySnapshot.docs.map((doc) => {
+      const data = doc.data()
+      const date = formatTimestamp(data.date.toDate())
+
+      return {
+        id: doc.id,
+        ...data,
+        date,
+      }
+    })
 
     return archivedReports
+  } catch (error) {
+    throw new Error(error.message || "Error, something happened")
+  }
+}
+
+export const hasUserArchivedReport = async (currentUser, reportId) => {
+  if (!currentUser) {
+    throw new Error("Error, invalid auth")
+  }
+
+  if (!reportId) {
+    throw new Error("Error, report id is missing")
+  }
+
+  try {
+    const userId = currentUser.uid
+    const userRef = doc(db, "users", userId)
+    const userDoc = await getDoc(userRef)
+
+    if (!userDoc.exists()) {
+      throw new Error("Error, user document does not exist")
+    }
+
+    const userData = userDoc.data()
+    const archivedReports = userData.archivedReports || []
+
+    return archivedReports.includes(reportId)
+  } catch (error) {
+    throw new Error(error.message || "Error, something happened")
+  }
+}
+
+export const getReportsHistory = async (currentUser: any) => {
+  if (!currentUser) {
+    throw new Error("Error, invalid auth")
+  }
+
+  try {
+    const userId = currentUser.uid
+
+    const userRef = doc(db, "users", userId)
+    const userDoc = await getDoc(userRef)
+
+    if (!userDoc.exists()) {
+      throw new Error("Error, user document does not exist")
+    }
+
+    const userData = userDoc.data()
+    const reportsHistoryId = userData.reportHistory || []
+
+    if (reportsHistoryId.length === 0) {
+      return []
+    }
+
+    const reportsRef = collection(db, "reports")
+    const q = query(reportsRef, where(documentId(), "in", reportsHistoryId))
+    const querySnapshot = await getDocs(q)
+
+    const reportsHistory = querySnapshot.docs.map((doc) => {
+      const data = doc.data()
+      const date = formatTimestamp(data.date.toDate())
+
+      return {
+        id: doc.id,
+        ...data,
+        date,
+      }
+    })
+
+    return reportsHistory
   } catch (error) {
     throw new Error(error.message || "Error, something happened")
   }
