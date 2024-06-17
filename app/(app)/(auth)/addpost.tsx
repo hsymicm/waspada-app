@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, Image, StyleSheet, Modal } from "react-native"
 import { Colors } from "../../../themes/Colors"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import StyledButton from "../../../components/StyledButton"
 import CameraScreen from "../../../components/CaptureScreen"
 import { StatusBar } from "expo-status-bar"
@@ -15,14 +15,17 @@ import MapThumbnail from "../../../components/MapThumbnail"
 import { revGeocode } from "../../../libs/geo"
 import { setReport } from "../../../models/reportModel"
 import { useAuth } from "../../../contexts/AuthContext"
-import { router, useNavigation } from "expo-router"
+import { router, useFocusEffect, useNavigation } from "expo-router"
 import { StackActions } from "@react-navigation/native"
 import { Shadow } from "react-native-shadow-2"
+import MapModal from "../../../components/Modal/MapModal"
 
 export default function AddPost() {
   const [isCameraModalVisible, setCameraModalVisible] = useState(false)
+  const [mapModalVisible, setMapModalVisible] = useState(false)
 
   const [result, setResult] = useState(null)
+  const [initialRegion, setInitialRegion] = useState(null)
 
   const [data, setData] = useState({
     description: "",
@@ -101,6 +104,18 @@ export default function AddPost() {
     setLoading(false)
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      setResult(null)
+      setData({
+        description: "",
+        image: null,
+        location: null,
+        timestamp: null,
+      })
+    }, [])
+  )
+
   useEffect(() => {
     const subscribe = async () => {
       if (result) {
@@ -130,6 +145,13 @@ export default function AddPost() {
           },
           timestamp: { DateTime, SubSecTime },
         })
+
+        setInitialRegion({
+          latitude: parseFloat(GPSLatitude),
+          longitude: parseFloat(GPSLongitude),
+          latitudeDelta: 0.00001,
+          longitudeDelta: kMToLongitudes(1.0, parseFloat(GPSLatitude)),
+        })
       }
     }
 
@@ -153,6 +175,11 @@ export default function AddPost() {
           setCameraModalVisible={setCameraModalVisible}
         />
       </Modal>
+      <MapModal
+        visible={mapModalVisible}
+        setVisible={setMapModalVisible}
+        initialRegion={initialRegion}
+      />
       <View style={{ flex: 1, height: "100%" }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -189,11 +216,11 @@ export default function AddPost() {
                 title="Buka Kamera"
                 onPress={() => setCameraModalVisible(true)}
               />
-              <StyledButton
+              {/* <StyledButton
                 style={{ flexGrow: 1 }}
                 title="Buka Galeri"
                 onPress={imagePicker}
-              />
+              /> */}
             </View>
             {data.image && data.location && data.timestamp && (
               <View style={styles.detailContainer}>
@@ -211,6 +238,7 @@ export default function AddPost() {
                 <View style={{ display: "flex", gap: 8 }}>
                   <Text style={styles.inputLabel}>Lokasi</Text>
                   <MapThumbnail
+                    onExpand={() => setMapModalVisible(true)}
                     initialRegion={{
                       latitude: parseFloat(data.location.GPSLatitude),
                       longitude: parseFloat(data.location.GPSLongitude),
