@@ -102,31 +102,42 @@ export default function EditProfile() {
         }}
       >
         <View style={styles.container}>
-          <View style={styles.profilePictureContainer}>
-            <Image
-              style={styles.profilePicture}
-              source={{
-                uri: !isLoading
-                  ? editProfile?.profilePicture ||
-                    `https://ui-avatars.com/api/?name=${profile.email}&size=128&background=random`
-                  : null,
-              }}
-              resizeMode="cover"
-            />
-            <View
-              style={{
-                position: "absolute",
-                bottom: -2,
-                right: -2,
-              }}
-            >
-              <TouchableOpacity onPress={imagePicker} activeOpacity={1}>
-                <View style={styles.profilePictureButton}>
-                  <PhotoIcon size={18} color={Colors.white} />
-                </View>
-              </TouchableOpacity>
+          {!isLoading ? (
+            <View style={styles.profilePictureContainer}>
+              <Image
+                style={styles.profilePicture}
+                source={{
+                  uri: `https://ui-avatars.com/api/?name=${profile.email}&size=128&background=random`,
+                }}
+                resizeMode="cover"
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: -2,
+                  right: -2,
+                }}
+              >
+                <TouchableOpacity onPress={imagePicker} activeOpacity={1}>
+                  <View style={styles.profilePictureButton}>
+                    <PhotoIcon size={18} color={Colors.white} />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          ) : (
+            <TextSkeleton
+              style={{
+                flex: 1,
+                height: 121,
+                aspectRatio: 1,
+                alignSelf: "center",
+                marginVertical: 16,
+              }}
+              borderRadius={99}
+              isLoading={isLoading}
+            />
+          )}
           <View style={styles.inputContainer}>
             <View style={styles.inputlabelContainer}>
               <Text style={styles.inputlabel}>Nama</Text>
@@ -142,7 +153,15 @@ export default function EditProfile() {
                 placeholder="Masukkan nama Anda"
               />
             ) : (
-              <TextSkeleton isLoading={isLoading} />
+              <TextSkeleton
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  height: 48,
+                }}
+                borderRadius={16}
+                isLoading={isLoading}
+              />
             )}
           </View>
           <View style={styles.inputContainer}>
@@ -160,7 +179,15 @@ export default function EditProfile() {
                 placeholder="Ceritakan tentang Anda"
               />
             ) : (
-              <TextSkeleton isLoading={isLoading} />
+              <TextSkeleton
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  height: 48,
+                }}
+                borderRadius={16}
+                isLoading={isLoading}
+              />
             )}
           </View>
           <View style={styles.inputContainer}>
@@ -168,7 +195,15 @@ export default function EditProfile() {
             {!isLoading ? (
               <TextInputField value={profile.email} disabled={true} />
             ) : (
-              <TextSkeleton isLoading={isLoading} />
+              <TextSkeleton
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  height: 48,
+                }}
+                borderRadius={16}
+                isLoading={isLoading}
+              />
             )}
           </View>
           <View style={styles.inputContainer}>
@@ -176,7 +211,15 @@ export default function EditProfile() {
             {!isLoading ? (
               <TextInputField value={`@${profile.username}`} disabled={true} />
             ) : (
-              <TextSkeleton isLoading={isLoading} />
+              <TextSkeleton
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  height: 48,
+                }}
+                borderRadius={16}
+                isLoading={isLoading}
+              />
             )}
           </View>
           {!isLoading ? (
