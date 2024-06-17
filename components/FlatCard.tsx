@@ -12,6 +12,7 @@ import {
 } from "react-native-heroicons/solid"
 import { Colors } from "../themes/Colors"
 import { TouchableOpacity } from "react-native-gesture-handler"
+import { router } from "expo-router"
 
 interface FlatCard {
   description: string
@@ -23,43 +24,44 @@ interface FlatCard {
 
 export default function FlatCard({ description, date, location, image, id }) {
   return (
-    <View style={styles.container}>
-      <View style={{ flex: 1 }}>
-        <Image
-          style={{ width: "100%", height: "100%" }}
-          source={{ uri: image }}
-        />
-      </View>
-      <View
-        style={{
-          flex: 3,
-          padding: 16,
-          gap: 8,
-        }}
-      >
-        <View style={{ gap: 4 }}>
-          <View style={styles.locationContainer}>
-            <Pin color={Colors.accent} size={14} />
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={styles.locationText}
-            >
-              {location}
-            </Text>
+    <TouchableWithoutFeedback
+      onPress={() => router.navigate(`/(app)/detail/${id}`)}
+    >
+
+      <View style={styles.container}>
+        <View style={{ flex: 1 }}>
+          <Image
+            style={{ width: "100%", height: "100%" }}
+            source={{ uri: image }}
+            resizeMode="cover"
+          />
+        </View>
+        <View
+          style={{
+            flex: 3,
+            padding: 16,
+            gap: 8,
+          }}
+        >
+          <View style={{ gap: 4 }}>
+            <View style={styles.locationContainer}>
+              <Pin color={Colors.accent} size={14} />
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={styles.locationText}
+              >
+                {location}
+              </Text>
+            </View>
+            <Text style={styles.date}>{date}</Text>
           </View>
-          <Text style={styles.date}>{date}</Text>
+          <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">
+            {description}
+          </Text>
         </View>
-        <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">
-          {description}
-        </Text>
       </View>
-      {/* <TouchableOpacity>
-        <View style={styles.button}>
-          <Arrow size={16} color={Colors.white} />
-        </View>
-      </TouchableOpacity> */}
-    </View>
+    </TouchableWithoutFeedback>
   )
 }
 
