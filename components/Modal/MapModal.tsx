@@ -51,7 +51,7 @@ export default function MapModal({ visible, setVisible, initialRegion }) {
       <View
         style={{
           position: "absolute",
-          top: 48,
+          top: 32,
           right: 32,
           display: "flex",
           gap: 16,
