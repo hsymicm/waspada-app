@@ -8,18 +8,19 @@ import { Colors } from "../themes/Colors"
 import { useState } from "react"
 
 interface StyledButtonProps {
-  title: string,
-  variant?: "primary" | "secondary",
-  size?: "small" | "normal",
-  iconLeft?: any,
-  iconRight?: any,
-  style?: object,
-  textStyle?: object,
-  disabled?: boolean,
-  loading?: boolean,
-  activeOpacity?: any,
-  onPress?: () => void,
-  onLongPress?: () => void,
+  title: string
+  variant?: "primary" | "secondary"
+  size?: "small" | "normal"
+  iconLeft?: any
+  iconRight?: any
+  style?: object
+  textStyle?: object
+  disabled?: boolean
+  enableDisabledStyle?: boolean
+  loading?: boolean
+  activeOpacity?: any
+  onPress?: () => void
+  onLongPress?: () => void
 }
 
 export default function StyledButton({
@@ -31,16 +32,17 @@ export default function StyledButton({
   style,
   textStyle,
   disabled,
+  enableDisabledStyle,
   activeOpacity = 0.7,
   loading,
   variant = "primary",
   size = "normal",
 }: StyledButtonProps) {
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false)
 
   const handleOnPressLoading = async () => {
     setLoading(true)
-    await onPress();
+    await onPress()
     setLoading(false)
   }
 
@@ -53,7 +55,7 @@ export default function StyledButton({
       style={[
         variant === "primary" ? styles.primaryButton : styles.secondaryButton,
         size === "normal" ? styles.sizeNormal : styles.sizeSmall,
-        disabled && { backgroundColor: Colors.disabled.light },
+        disabled && enableDisabledStyle && { backgroundColor: Colors.disabled.light },
         styles.button,
         style,
       ]}
@@ -65,7 +67,7 @@ export default function StyledButton({
         <Text
           style={[
             variant === "primary" ? styles.primaryText : styles.secondaryText,
-            disabled && { color: Colors.disabled.dark },
+            disabled && enableDisabledStyle && { color: Colors.disabled.dark },
             styles.text,
             textStyle,
           ]}
