@@ -1,23 +1,22 @@
 import { Image as ExpoImage } from "expo-image"
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableWithoutFeedback,
-} from "react-native"
+import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native"
 import {
   ShareIcon,
   BookmarkIcon,
+  BookmarkSlashIcon,
   MapPinIcon as Pin,
 } from "react-native-heroicons/solid"
-import {
-  BookmarkIcon as BookmarkIconOutline
-} from "react-native-heroicons/outline"
+import { BookmarkIcon as BookmarkIconOutline } from "react-native-heroicons/outline"
 import { Colors } from "../themes/Colors"
 import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
 import VoteCounter from "./VoteCounter"
 import { useAuth } from "../contexts/AuthContext"
+import {
+  handleArchiveReport,
+  hasUserArchivedReport,
+} from "../models/profileModel"
+import { useEffect, useState } from "react"
 
 interface CardProps {
   id: string
@@ -39,6 +38,36 @@ function Card({
   reportedAlot,
 }: CardProps) {
   const { currentUser } = useAuth()
+  const [hasArchived, setHasArchived] = useState(false)
+
+  useEffect(() => {
+    const checkUserHasArchived = async () => {
+      const status = await hasUserArchivedReport(currentUser, id)
+
+      if (status) {
+        setHasArchived(true)
+      } else {
+        setHasArchived(false)
+      }
+    }
+
+    if (currentUser && id) {
+      checkUserHasArchived()
+    }
+  }, [currentUser, id])
+
+  const handleArchiveSubmit = async () => {
+    try {
+      await handleArchiveReport(
+        currentUser,
+        id,
+        hasArchived ? "unarchive" : "archive"
+      )
+      setHasArchived(!hasArchived)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <TouchableWithoutFeedback
@@ -81,14 +110,18 @@ function Card({
                 onPress={() => console.log("Share Pressed")}
               >
                 <View style={{ padding: 8 }}>
-                  <ShareIcon size={18} color={Colors.white} />
+                  <ShareIcon size={16} color={Colors.white} />
                 </View>
               </TouchableWithoutFeedback>
               <TouchableWithoutFeedback
-                onPress={() => console.log("Bookmark Pressed")}
+                onPress={handleArchiveSubmit}
               >
                 <View style={{ padding: 8 }}>
-                  <BookmarkIconOutline size={18} color={Colors.white} />
+                  {hasArchived ? (
+                    <BookmarkIcon size={18} color={Colors.white} />
+                  ) : (
+                    <BookmarkIconOutline size={18} color={Colors.white} />
+                  )}
                 </View>
               </TouchableWithoutFeedback>
             </View>
