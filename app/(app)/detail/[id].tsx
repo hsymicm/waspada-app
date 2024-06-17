@@ -13,10 +13,11 @@ import {
   ShareIcon,
   BookmarkIcon,
 } from "react-native-heroicons/solid"
+import { BookmarkIcon as BookmarkIconOutline } from "react-native-heroicons/outline"
 import StyledIconButton from "../../../components/StyledIconButton"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { kMToLongitudes } from "../../../libs/utils"
-import { useLocalSearchParams, useNavigation } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
 import { getReportDetail } from "../../../models/reportModel"
 import LoadingSkeleton from "../../../components/Skeleton/CardSkeleton"
 import TextSkeleton from "../../../components/Skeleton/TextSkeleton"
@@ -25,11 +26,19 @@ import { useAuth } from "../../../contexts/AuthContext"
 import VoteCounter from "../../../components/VoteCounter"
 import MapThumbnail from "../../../components/MapThumbnail"
 import MapModal from "../../../components/Modal/MapModal"
+import {
+  handleArchiveReport,
+  hasUserArchivedReport,
+} from "../../../models/profileModel"
 
 function DetailPost() {
-  const { id } = useLocalSearchParams()
+  const { id }: any = useLocalSearchParams()
+
   const [isExpand, setExpand] = useState(false)
+  const [enableExpand, setEnableExpand] = useState(false)
+
   const [reportDetail, setReportDetail] = useState(null)
+  const [hasArchived, setHasArchived] = useState(false)
   const [initialRegion, setInitialRegion] = useState(null)
   const [isLoading, setLoading] = useState(false)
 
@@ -37,7 +46,6 @@ function DetailPost() {
   const [mapModalVisible, setMapModalVisible] = useState(false)
 
   const { currentUser } = useAuth()
-  const navigation = useNavigation()
 
   const fetchReportDetail = async (id: any) => {
     setLoading(true)
@@ -57,9 +65,41 @@ function DetailPost() {
     setLoading(false)
   }
 
+  const onTextLayout = useCallback((e: any) => {
+    setEnableExpand(e.nativeEvent.lines.length > 2)
+  }, [])
+
+  useEffect(() => {}, [currentUser, id])
+
+  const handleArchiveSubmit = async () => {
+    try {
+      await handleArchiveReport(
+        currentUser,
+        id,
+        hasArchived ? "unarchive" : "archive"
+      )
+      setHasArchived(!hasArchived)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
-    fetchReportDetail(id)
-  }, [id])
+    const checkUserHasArchived = async () => {
+      const status = await hasUserArchivedReport(currentUser, id)
+
+      if (status) {
+        setHasArchived(true)
+      } else {
+        setHasArchived(false)
+      }
+    }
+
+    if (currentUser && id) {
+      fetchReportDetail(id)
+      checkUserHasArchived()
+    }
+  }, [currentUser, id])
 
   return (
     <View style={{ flex: 1, height: "100%" }}>
@@ -112,6 +152,7 @@ function DetailPost() {
               <View style={{ display: "flex", gap: 4 }}>
                 {!isLoading && reportDetail ? (
                   <Text
+                    onTextLayout={onTextLayout}
                     style={styles.detailParagraph}
                     numberOfLines={isExpand ? null : 2}
                   >
@@ -120,14 +161,16 @@ function DetailPost() {
                 ) : (
                   <TextSkeleton isLoading={isLoading} numberOfLines={2} />
                 )}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => setExpand(!isExpand)}
-                >
-                  <Text style={styles.detailExpand}>
-                    {isExpand ? "Lihat lebih sedikit" : "Lihat selengkapnya"}
-                  </Text>
-                </TouchableOpacity>
+                {enableExpand && (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setExpand(!isExpand)}
+                  >
+                    <Text style={styles.detailExpand}>
+                      {isExpand ? "Lihat lebih sedikit" : "Lihat selengkapnya"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
             {reportDetail?.latitude && reportDetail?.longitude && (
@@ -156,11 +199,22 @@ function DetailPost() {
       <View style={styles.footerContainer}>
         <View style={styles.footerCapsule}>
           <View style={styles.actionContainer}>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => {}}>
-              <ShareIcon size={18} color={Colors.white} />
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => console.log("Share Pressed")}
+            >
+              <View style={{ padding: 8 }}>
+                <ShareIcon size={16} color={Colors.white} />
+              </View>
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => {}}>
-              <BookmarkIcon size={18} color={Colors.white} />
+            <TouchableOpacity activeOpacity={0.7} onPress={handleArchiveSubmit}>
+              <View style={{ padding: 8 }}>
+                {hasArchived ? (
+                  <BookmarkIcon size={18} color={Colors.white} />
+                ) : (
+                  <BookmarkIconOutline size={18} color={Colors.white} />
+                )}
+              </View>
             </TouchableOpacity>
           </View>
           <VoteCounter
@@ -247,7 +301,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     display: "flex",
     flexDirection: "row",
-    gap: 24,
+    gap: 12,
   },
 
   ratingContainer: {
