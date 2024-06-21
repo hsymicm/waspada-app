@@ -12,7 +12,10 @@ import {
 import * as Location from "expo-location"
 import { Camera, CameraType, FlashMode, ImageType } from "expo-camera"
 import { Video } from "expo-av"
-import { Image as ImageCompressor } from "react-native-compressor"
+import {
+  Image as ImageCompressor,
+  Video as VideoCompressor,
+} from "react-native-compressor"
 
 import {
   XMarkIcon,
@@ -112,10 +115,6 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
 
   const takePicture = async () => {
     if (isRatioSet) {
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      })
-
       const data = await cameraRef.current.takePictureAsync({
         exif: true,
         quality: 0,
@@ -123,27 +122,45 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
         skipProcessing: true,
       })
 
-      data.exif = {
-        ...data.exif,
+      setImage(data)
+
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+
+      const locData = {
         GPSLatitude: loc.coords.latitude,
         GPSLongitude: loc.coords.longitude,
         GPSAltitude: loc.coords.altitude,
       }
 
-      setImage(data)
+      setLocation(locData)
     }
   }
 
-  
-  const compressResult = async (image: any) => {
+  const compressResult = async () => {
+    if (!location) return
+
     if (isPhoto) {
       const compress = await ImageCompressor.compress(image.uri, {
         returnableOutputType: "uri",
       })
 
-      const final = {...image, uri: compress}
+      const final = {
+        ...image,
+        uri: compress,
+        exif: { ...image.exif, ...location },
+      }
+      console.log(final)
       setResult(final)
+    } else {
+      return
     }
+  }
+
+  const handleOnSubmit = async () => {
+    await compressResult()
+    setCameraModalVisible(false)
   }
 
   if (image) {
@@ -189,10 +206,7 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => {
-                  compressResult(image)
-                  setCameraModalVisible(false)
-                }}
+                onPress={handleOnSubmit}
                 style={{ padding: 16 }}
               >
                 <Text style={[styles.text, { fontSize: 18 }]}>Lanjut</Text>
