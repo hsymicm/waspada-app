@@ -9,7 +9,11 @@ import {
 import { Colors } from "../../../../themes/Colors"
 import { useAuth } from "../../../../contexts/AuthContext"
 import { useEffect, useState } from "react"
-import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router"
+import {
+  router,
+  useFocusEffect,
+  useNavigation,
+} from "expo-router"
 import {
   ChevronRightIcon as ArrowIcon,
   ArchiveBoxIcon,
@@ -78,7 +82,7 @@ export default function Profile() {
       console.log(error)
     }
   }
-  
+
   const fetchProfile = async () => {
     try {
       const profile = await getUserProfile(currentUser)
@@ -109,7 +113,9 @@ export default function Profile() {
               <Image
                 style={styles.profilePicture}
                 source={{
-                  uri: `https://ui-avatars.com/api/?name=${profile.email}&size=128&background=random`,
+                  uri: profile?.profilePicture
+                    ? profile.profilePicture
+                    : `https://ui-avatars.com/api/?name=${profile.email}&size=128&background=random`,
                 }}
                 resizeMode="cover"
               />
