@@ -106,18 +106,16 @@ export default function CurrentLocationFeed({ currentUser }) {
 
   const getLocationBySearch = async (searchLocation: string | null) => {
     try {
-      const response = await geocode({
-        location: searchLocation,
-      })
-
-      const { address, position } = response.items[0]
-
+      const response = await geocode({ location: searchLocation })
+      
+      const { address, position } = response?.items ? response.items[0] : response
+      
       const formattedAddress = formatAddress(address)
       setcurrentAddress(formattedAddress)
-
+      
       return { latitude: position.lat, longitude: position.lng }
     } catch (error) {
-      throw new Error(error?.message || "Error, something happened")
+      throw new Error(error || "Error, something happened")
     }
   }
 
