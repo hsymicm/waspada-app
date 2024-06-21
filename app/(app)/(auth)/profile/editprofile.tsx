@@ -41,7 +41,7 @@ export default function EditProfile() {
     setEditProfile({
       description: res.description,
       displayName: res.displayName,
-      profilePicture: null,
+      profilePicture: res.profilePicture,
     })
     setLoading(false)
   }
@@ -95,6 +95,7 @@ export default function EditProfile() {
   return (
     <View style={{ flex: 1, height: "100%" }}>
       <ScrollView
+        keyboardShouldPersistTaps='handled'
         showsVerticalScrollIndicator={false}
         style={{
           position: "relative",
@@ -107,7 +108,9 @@ export default function EditProfile() {
               <Image
                 style={styles.profilePicture}
                 source={{
-                  uri: `https://ui-avatars.com/api/?name=${profile.email}&size=128&background=random`,
+                  uri: editProfile?.profilePicture
+                    ? editProfile.profilePicture
+                    : `https://ui-avatars.com/api/?name=${profile.email}&size=128&background=random`,
                 }}
                 resizeMode="cover"
               />

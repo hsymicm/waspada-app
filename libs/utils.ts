@@ -1,3 +1,6 @@
+// import { distance } from "fastest-levenshtein"
+import { useEffect, useMemo, useRef } from "react"
+
 export const scrollTop = (ref: any) => {
   if (ref?.current) {
     ref.current?.scrollTo({
@@ -53,7 +56,7 @@ export const formatElapsedTime = (timestamp: any) => {
   } else if (minutes >= 1) {
     return `${minutes} menit yang lalu`
   } else {
-    return "Baru saja" 
+    return "Baru saja"
   }
 }
 
@@ -99,3 +102,40 @@ export const formatTimestamp = (date: any) => {
 export const kMToLongitudes = (km: number, atLatitude: number) => {
   return (km * 0.0089831) / Math.cos(atLatitude * (Math.PI / 180))
 }
+
+// export type FuzzySearchOptions = {
+//   limit?: number
+//   threshold?: number
+// }
+
+// export type FuzzySearchProps = {
+//   query: string
+//   array: string[]
+//   options?: FuzzySearchOptions
+// }
+
+// type Result = {
+//   item: string
+//   distance: number
+// }
+
+// export const fuzzySearch = (
+//   query: string,
+//   array: string[],
+//   options: FuzzySearchOptions = {}
+// ): string[] => {
+//   const { limit = array.length, threshold = 5 } = options
+
+//   const results: Result[] = array
+//     .map((item: any) => ({
+//       item,
+//       distance: distance(query, item.address.label),
+//     }))
+//     .filter((result) => result.distance <= threshold)
+//     .sort((a, b) => a.distance - b.distance)
+//     .slice(0, limit)
+
+//   console.log(query)
+
+//   return results.map((result) => result.item)
+// }
