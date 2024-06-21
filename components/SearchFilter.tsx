@@ -1,16 +1,22 @@
-import { StyleSheet, TextInput, TouchableOpacity, View, Text } from "react-native"
+import {
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native"
 import {
   MagnifyingGlassIcon as SearchIcon,
   XMarkIcon,
 } from "react-native-heroicons/solid"
 import { Colors } from "../themes/Colors"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface SearchFilterProps {
   style?: object
   placeholder?: string
   value?: string
   setValue?: any
+  active?: any
   onSubmit?: any
 }
 
@@ -18,10 +24,19 @@ export default function SearchFilter({
   placeholder,
   value,
   setValue,
+  active,
   onSubmit,
   style,
 }: SearchFilterProps) {
   const [isActive, setActive] = useState(false)
+
+  const onEnterSubmit = () => {
+    onSubmit({ address: { label: value } })
+  }
+
+  useEffect(() => {
+    active(isActive)
+  }, [isActive])
 
   return (
     <View style={{ position: "relative", flex: 1 }}>
@@ -30,7 +45,6 @@ export default function SearchFilter({
         style={[
           styles.input,
           isActive && { borderColor: Colors.accent },
-          (value === "" || !value) && { paddingLeft: 44 },
           style,
         ]}
         value={value}
@@ -39,51 +53,39 @@ export default function SearchFilter({
         onFocus={() => setActive(true)}
         onBlur={() => setActive(false)}
         selectionColor={Colors.accent}
-        onSubmitEditing={onSubmit}
+        onSubmitEditing={onEnterSubmit}
       />
       <View
         style={{
-          top: "100%",
-          // bottom: "100%",
-          transform: [{ translateY: 16}],
           position: "absolute",
-          borderWidth: 1,
-          borderColor: Colors.gray,
-          borderRadius: 16,
-          backgroundColor: Colors.white,
-          elevation: 1,
+          top: 13,
+          left: 15,
         }}
       >
-        <Text>Hello World!</Text>
-        <Text>Hello World!</Text>
-        <Text>Hello World!</Text>
-        <Text>Hello World!</Text>
-        <Text>Hello World!</Text>
+        <SearchIcon size={20} color={Colors.accent} />
       </View>
-      <View
-        style={[
-          {
+      {value && (
+        <TouchableOpacity
+          style={{
             position: "absolute",
             top: 13,
-          },
-          value === "" || !value ? { left: 15 } : { right: 14 },
-        ]}
-      >
-        {value === "" || !value ? (
-          <SearchIcon size={20} color={Colors.accent} />
-        ) : (
-          <TouchableOpacity activeOpacity={0.7} onPress={() => setValue("")}>
-            <XMarkIcon size={20} color={Colors.gray} />
-          </TouchableOpacity>
-        )}
-      </View>
+            right: 15,
+          }}
+          activeOpacity={0.7}
+          onPress={() => {
+            setValue("")
+          }}
+        >
+          <XMarkIcon size={20} color={Colors.gray} />
+        </TouchableOpacity>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   input: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 44,
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: Colors.gray,
