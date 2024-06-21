@@ -112,6 +112,7 @@ export default function SignIn() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
+        keyboardShouldPersistTaps='handled'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
         style={{

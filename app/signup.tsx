@@ -124,6 +124,7 @@ export default function SignUp() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
         ref={_scrollView}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
         style={{
@@ -159,7 +160,7 @@ export default function SignUp() {
             <TextInputField
               value={username}
               setValue={(val) => {
-                setUsername(val.replace(/\s/g, ''))
+                setUsername(val.replace(/\s/g, ""))
               }}
               autoCapitalize="none"
               type="default"
@@ -181,7 +182,7 @@ export default function SignUp() {
             <TextInputField
               value={password}
               setValue={(val) => {
-                setPassword(val.replace(/\s/g, ''))
+                setPassword(val.replace(/\s/g, ""))
               }}
               autoCapitalize="none"
               type="default"
@@ -198,7 +199,7 @@ export default function SignUp() {
             <TextInputField
               value={confirmPassword}
               setValue={(val) => {
-                setConfirmPassword(val.replace(/\s/g, ''))
+                setConfirmPassword(val.replace(/\s/g, ""))
               }}
               autoCapitalize="none"
               type="default"
