@@ -17,7 +17,7 @@ export default function HomeScreen() {
 
   const renderFeed = () => {
     if (_filter === "near" || !_filter) {
-      return <CurrentLocationFeed filter={_filter} searchLocation={_search} currentUser={currentUser} />
+      return <CurrentLocationFeed currentUser={currentUser} />
     }
 
     if (_filter === "popular") {
