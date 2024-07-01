@@ -5,6 +5,8 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
 } from "react-native"
 import { Colors } from "../../../themes/Colors"
 import {
@@ -15,10 +17,13 @@ import {
 } from "react-native-heroicons/solid"
 import { BookmarkIcon as BookmarkIconOutline } from "react-native-heroicons/outline"
 import StyledIconButton from "../../../components/StyledIconButton"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { kMToLongitudes } from "../../../libs/utils"
 import { useLocalSearchParams } from "expo-router"
-import { getReportDetail } from "../../../models/reportModel"
+import {
+  downloadAndShareFile,
+  getReportDetail,
+} from "../../../models/reportModel"
 import LoadingSkeleton from "../../../components/Skeleton/CardSkeleton"
 import TextSkeleton from "../../../components/Skeleton/TextSkeleton"
 import ImageModal from "../../../components/Modal/ImageModal"
@@ -30,6 +35,11 @@ import {
   handleArchiveReport,
   hasUserArchivedReport,
 } from "../../../models/profileModel"
+import { StatusBar } from "expo-status-bar"
+import VideoModal from "../../../components/Modal/VideoModal"
+import { useFocusEffect, useIsFocused } from "@react-navigation/native"
+import { ResizeMode, Video } from "expo-av"
+import VideoPlayer from "../../../components/VideoPlayer"
 
 function DetailPost() {
   const { id }: any = useLocalSearchParams()
@@ -41,11 +51,13 @@ function DetailPost() {
   const [hasArchived, setHasArchived] = useState(false)
   const [initialRegion, setInitialRegion] = useState(null)
   const [isLoading, setLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
 
-  const [imageModalVisible, setImageModalVisible] = useState(false)
+  const [sourceModalVisible, setSourceModalVisible] = useState(false)
   const [mapModalVisible, setMapModalVisible] = useState(false)
 
   const { currentUser } = useAuth()
+  const isFocus = useIsFocused()
 
   const fetchReportDetail = async (id: any) => {
     setLoading(true)
@@ -69,9 +81,8 @@ function DetailPost() {
     setEnableExpand(e.nativeEvent.lines.length > 2)
   }, [])
 
-  useEffect(() => {}, [currentUser, id])
-
   const handleArchiveSubmit = async () => {
+    setActionLoading(true)
     try {
       await handleArchiveReport(
         currentUser,
@@ -81,6 +92,20 @@ function DetailPost() {
       setHasArchived(!hasArchived)
     } catch (error) {
       console.log(error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleShare = async (url: string, filename: string) => {
+    setActionLoading(true)
+    try {
+      console.log("sharing...")
+      await downloadAndShareFile(url, filename)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -102,129 +127,179 @@ function DetailPost() {
   }, [currentUser, id])
 
   return (
-    <View style={{ flex: 1, height: "100%" }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{
-          position: "relative",
-          backgroundColor: Colors.lightGray,
-        }}
-      >
-        <View style={styles.container}>
-          <ImageModal
-            imageModalVisible={imageModalVisible}
-            setImageModalVisible={setImageModalVisible}
-            url={reportDetail?.imageUrl}
-          />
-          <MapModal
-            visible={mapModalVisible}
-            setVisible={setMapModalVisible}
-            initialRegion={initialRegion}
-          />
-          {!isLoading && reportDetail?.many && (
-            <View style={styles.headerNotification}>
-              <ExclamationCircleIcon color={Colors.white} />
-              <Text style={styles.headerText}>
-                Terdapat banyak laporan di area yang sama
-              </Text>
-            </View>
-          )}
-          {!isLoading && reportDetail?.imageUrl ? (
-            <View style={styles.imageContainer}>
-              <Image
-                style={styles.imageContent}
-                source={{
-                  uri: reportDetail.imageUrl,
-                }}
+    <>
+      <View style={{ flex: 1, height: "100%" }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{
+            position: "relative",
+            backgroundColor: Colors.lightGray,
+          }}
+        >
+          <View style={styles.container}>
+            {reportDetail?.type === "video" ? (
+              <VideoModal
+                visible={sourceModalVisible}
+                setVisible={setSourceModalVisible}
+                url={reportDetail?.videoUrl}
+                thumbnail={reportDetail?.thumbnail}
               />
-              <StyledIconButton
-                onPress={() => setImageModalVisible(true)}
-                style={[styles.imageExpand, { bottom: 16, right: 16 }]}
-              >
-                <ArrowsPointingOutIcon color={Colors.white} />
-              </StyledIconButton>
-            </View>
-          ) : null}
-          <LoadingSkeleton isLoading={isLoading} firstLoad={false} />
-          <View style={styles.detailContainer}>
-            <View style={styles.detailInfo}>
-              <Text style={styles.detailLabel}>Deskripsi</Text>
-              <View style={{ display: "flex", gap: 4 }}>
-                {!isLoading && reportDetail ? (
-                  <Text
-                    onTextLayout={onTextLayout}
-                    style={styles.detailParagraph}
-                    numberOfLines={isExpand ? null : 2}
-                  >
-                    {reportDetail.description}
-                  </Text>
-                ) : (
-                  <TextSkeleton isLoading={isLoading} numberOfLines={2} />
-                )}
-                {enableExpand && (
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setExpand(!isExpand)}
-                  >
-                    <Text style={styles.detailExpand}>
-                      {isExpand ? "Lihat lebih sedikit" : "Lihat selengkapnya"}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-            {reportDetail?.latitude && reportDetail?.longitude && (
-              <View style={styles.detailInfo}>
-                <Text style={styles.detailLabel}>Lokasi</Text>
-                <MapThumbnail
-                  onExpand={() => setMapModalVisible(true)}
-                  initialRegion={initialRegion}
-                />
-                <Text style={styles.detailParagraph}>
-                  {reportDetail.address}
+            ) : (
+              <ImageModal
+                visible={sourceModalVisible}
+                setVisible={setSourceModalVisible}
+                url={reportDetail?.imageUrl}
+              />
+            )}
+            <MapModal
+              visible={mapModalVisible}
+              setVisible={setMapModalVisible}
+              initialRegion={initialRegion}
+            />
+            {!isLoading && reportDetail?.many && (
+              <View style={styles.headerNotification}>
+                <ExclamationCircleIcon color={Colors.white} />
+                <Text style={styles.headerText}>
+                  Terdapat banyak laporan di area yang sama
                 </Text>
               </View>
             )}
-            <View style={styles.detailInfo}>
-              <Text style={styles.detailLabel}>Waktu</Text>
-              {!isLoading && reportDetail ? (
-                <Text style={styles.detailParagraph}>{reportDetail.date}</Text>
-              ) : (
-                <TextSkeleton isLoading={isLoading} />
-              )}
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-      <View style={styles.footerContainer}>
-        <View style={styles.footerCapsule}>
-          <View style={styles.actionContainer}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => console.log("Share Pressed")}
-            >
-              <View style={{ padding: 8 }}>
-                <ShareIcon size={16} color={Colors.white} />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.7} onPress={handleArchiveSubmit}>
-              <View style={{ padding: 8 }}>
-                {hasArchived ? (
-                  <BookmarkIcon size={18} color={Colors.white} />
+            {!isLoading &&
+            (reportDetail?.imageUrl || reportDetail?.videoUrl) ? (
+              <View style={styles.imageContainer}>
+                {reportDetail?.type === "photo" || !reportDetail?.type ? (
+                  <Image
+                    style={styles.imageContent}
+                    source={{
+                      uri: reportDetail.imageUrl,
+                    }}
+                  />
                 ) : (
-                  <BookmarkIconOutline size={18} color={Colors.white} />
+                  <VideoPlayer
+                    source={reportDetail?.videoUrl}
+                    thumbnail={reportDetail?.thumbnail}
+                    shouldPlay={!(sourceModalVisible || mapModalVisible)}
+                    styles={{
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "black",
+                    }}
+                    resizeMode="cover"
+                  />
+                )}
+
+                <StyledIconButton
+                  onPress={() => setSourceModalVisible(true)}
+                  style={[styles.imageExpand, { bottom: 16, right: 16 }]}
+                >
+                  <ArrowsPointingOutIcon color={Colors.white} />
+                </StyledIconButton>
+              </View>
+            ) : null}
+            <LoadingSkeleton isLoading={isLoading} firstLoad={false} />
+            <View style={styles.detailContainer}>
+              <View style={styles.detailInfo}>
+                <Text style={styles.detailLabel}>Deskripsi</Text>
+                <View style={{ display: "flex", gap: 4 }}>
+                  {!isLoading && reportDetail ? (
+                    <Text
+                      onTextLayout={onTextLayout}
+                      style={styles.detailParagraph}
+                      numberOfLines={isExpand ? null : 2}
+                    >
+                      {reportDetail.description}
+                    </Text>
+                  ) : (
+                    <TextSkeleton isLoading={isLoading} numberOfLines={2} />
+                  )}
+                  {enableExpand && (
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setExpand(!isExpand)}
+                    >
+                      <Text style={styles.detailExpand}>
+                        {isExpand
+                          ? "Lihat lebih sedikit"
+                          : "Lihat selengkapnya"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+              {reportDetail?.latitude && reportDetail?.longitude && (
+                <View style={styles.detailInfo}>
+                  <Text style={styles.detailLabel}>Lokasi</Text>
+                  <MapThumbnail
+                    onExpand={() => setMapModalVisible(true)}
+                    initialRegion={initialRegion}
+                  />
+                  <Text style={styles.detailParagraph}>
+                    {reportDetail.address}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.detailInfo}>
+                <Text style={styles.detailLabel}>Waktu</Text>
+                {!isLoading && reportDetail ? (
+                  <Text style={styles.detailParagraph}>
+                    {reportDetail.date}
+                  </Text>
+                ) : (
+                  <TextSkeleton isLoading={isLoading} />
                 )}
               </View>
-            </TouchableOpacity>
+            </View>
           </View>
-          <VoteCounter
-            reportId={id}
-            userId={currentUser?.uid}
-            rating={reportDetail?.voteCounter}
-          />
+        </ScrollView>
+        <View style={styles.footerContainer}>
+          <View style={styles.footerCapsule}>
+            <View style={styles.actionContainer}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() =>
+                  handleShare(
+                    reportDetail?.type === "video"
+                      ? reportDetail?.videoUrl
+                      : reportDetail?.imageUrl,
+                    `${id}.${reportDetail?.type === "video" ? "mp4" : "jpg"}`
+                  )
+                }
+                disabled={actionLoading}
+              >
+                <View style={{ padding: 8 }}>
+                  <ShareIcon size={16} color={Colors.white} />
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleArchiveSubmit}
+                disabled={actionLoading}
+              >
+                <View style={{ padding: 8 }}>
+                  {hasArchived ? (
+                    <BookmarkIcon size={18} color={Colors.white} />
+                  ) : (
+                    <BookmarkIconOutline size={18} color={Colors.white} />
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+            <VoteCounter
+              reportId={id}
+              userId={currentUser?.uid}
+              rating={reportDetail?.voteCounter}
+            />
+          </View>
         </View>
       </View>
-    </View>
+      <StatusBar
+        hidden={sourceModalVisible}
+        translucent
+        animated
+        backgroundColor={Colors.white}
+        style="dark"
+      />
+    </>
   )
 }
 
@@ -257,6 +332,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#9FA3B8",
     borderRadius: 16,
+    overflow: "hidden",
   },
 
   imageContent: { width: "100%", height: "100%", borderRadius: 16 },

@@ -1,17 +1,14 @@
 import {
   Modal,
   View,
-  Text,
-  ActivityIndicator,
-  TouchableWithoutFeedback,
   SafeAreaView,
 } from "react-native"
 import StyledIconButton from "../StyledIconButton"
 import { XMarkIcon } from "react-native-heroicons/solid"
 import { Colors } from "../../themes/Colors"
-import { Image as ExpoImage } from "expo-image"
+import VideoPlayer from "../VideoPlayer"
 
-const ImageModal = ({ visible, setVisible, url }) => {
+const VideoModal = ({ visible, setVisible, url, thumbnail }) => {
   return (
     <Modal
       animationType="fade"
@@ -53,22 +50,20 @@ const ImageModal = ({ visible, setVisible, url }) => {
         }}
       >
         <View style={{ position: "relative", width: "100%", elevation: 1 }}>
-          {url ? (
-            <ExpoImage
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
-              contentFit="contain"
-              source={url}
-            />
-          ) : (
-            <ActivityIndicator size="large" color={Colors.white} />
-          )}
+          <VideoPlayer
+            source={url}
+            thumbnail={thumbnail}
+            shouldPlay={true}
+            styles={{
+              width: "100%",
+              height: "100%",
+            }}
+            resizeMode="contain"
+          />
         </View>
       </View>
     </Modal>
   )
 }
 
-export default ImageModal
+export default VideoModal

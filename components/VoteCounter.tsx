@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native"
 import StyledIconButton from "./StyledIconButton"
-import React, { useEffect, useState } from "react"
+import React, { memo, useEffect, useState } from "react"
 import { Colors } from "../themes/Colors"
 import { formatRatingCounter } from "../libs/utils"
 import {
@@ -17,7 +17,7 @@ interface VoteCounterProps {
   onUpdate?: any,
 }
 
-export default function VoteCounter({ card, reportId, rating, userId, onUpdate }: VoteCounterProps) {
+function VoteCounter({ card, reportId, rating, userId, onUpdate }: VoteCounterProps) {
   const [currentVote, setCurrentVote] = useState(0)
   const [displayedRating, setDisplayedRating] = useState(rating ?? 0)
 
@@ -142,3 +142,5 @@ const styles = StyleSheet.create({
     color: Colors.black,
   },
 })
+
+export default memo(VoteCounter)

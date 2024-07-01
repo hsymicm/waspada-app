@@ -4,16 +4,8 @@ import {
   getDoc,
   updateDoc,
   doc,
-  limit,
-  orderBy,
   query,
-  startAfter,
   serverTimestamp,
-  Timestamp,
-  addDoc,
-  runTransaction,
-  startAt,
-  endAt,
   arrayUnion,
   arrayRemove,
   where,
@@ -24,6 +16,7 @@ import {
   FIREBASE_STORAGE as storage,
 } from "../firebase.config"
 import { formatTimestamp } from "../libs/utils"
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 
 export const handleArchiveReport = async (
   currentUser: any,
@@ -226,7 +219,24 @@ export const updateUserProfile = async (
       updatedAt: serverTimestamp(),
     }
 
-    if (profilePicture !== undefined) updateData.profilePicture = profilePicture
+    if (profilePicture !== undefined) {
+      const response = await fetch(profilePicture)
+
+      if (!response.ok) {
+        throw new Error("Failed to get image")
+      }
+
+      const blob = await response.blob()
+
+      const ext = profilePicture.substring(profilePicture.lastIndexOf("/") + 1).split(".")[1]
+      const storageRef = ref(storage, `users/${userId}/profile-picture/profile-picture-${userId}.${ext}`)
+
+      const storageSnapshot = await uploadBytes(storageRef, blob)
+      const downloadUrl = await getDownloadURL(storageSnapshot.ref)
+
+      updateData.profilePicture = downloadUrl
+    }
+
     if (displayName !== undefined) updateData.displayName = displayName
     if (description !== undefined) updateData.description = description
 

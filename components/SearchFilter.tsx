@@ -16,7 +16,7 @@ interface SearchFilterProps {
   placeholder?: string
   value?: string
   setValue?: any
-  active?: any
+  onActive?: any
   onSubmit?: any
 }
 
@@ -24,19 +24,14 @@ export default function SearchFilter({
   placeholder,
   value,
   setValue,
-  active,
+  onActive,
   onSubmit,
   style,
 }: SearchFilterProps) {
-  const [isActive, setActive] = useState(false)
 
   const onEnterSubmit = () => {
     onSubmit({ address: { label: value } })
   }
-
-  useEffect(() => {
-    active(isActive)
-  }, [isActive])
 
   return (
     <View style={{ position: "relative", flex: 1 }}>
@@ -44,14 +39,14 @@ export default function SearchFilter({
         placeholder={placeholder}
         style={[
           styles.input,
-          isActive && { borderColor: Colors.accent },
           style,
         ]}
         value={value}
         onChangeText={setValue}
         returnKeyType="search"
-        onFocus={() => setActive(true)}
-        onBlur={() => setActive(false)}
+        onFocus={() => onActive(true)}
+        onBlur={() => onActive(false)}
+        autoCapitalize="none"
         selectionColor={Colors.accent}
         onSubmitEditing={onEnterSubmit}
       />

@@ -1,7 +1,7 @@
 module.exports = {
   expo: {
-    name: "Waspada",
-    slug: "waspada-app",
+    name: process.env.NODE_ENV === "development" ? "Waspada development" : "Waspada",
+    slug: process.env.NODE_ENV === "development" ? "waspada-app-development" : "waspada-app",
     version: "1.0.0",
     extra: {
       eas: {
@@ -28,7 +28,7 @@ module.exports = {
       supportsTablet: true
     },
     android: {
-      package: "com.waspada.waspada",
+      package: process.env.NODE_ENV === "development" ? "com.waspadadev.waspadadev" : "com.waspada.waspada",
       config: {
         googleMaps: {
           apiKey: process.env.MAPS_API_KEY
@@ -66,5 +66,5 @@ module.exports = {
       typedRoutes: true
     }
   },
-  
+
 }

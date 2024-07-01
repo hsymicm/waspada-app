@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   StyleSheet,
   Text,
@@ -22,7 +22,8 @@ export default function PopularFeed({ currentUser }) {
   const [lastReport, setLastReport] = useState(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [isRefresh, setRefresh] = useState<boolean>(false)
-  
+  const [visibleReports, setVisibleReports] = useState<string[]>([])
+
   const fetchAllReports = async () => {
     setLoading(true)
     const res = await getPopularReports.firstBatch()
@@ -48,6 +49,19 @@ export default function PopularFeed({ currentUser }) {
     setRefresh(false)
   }
 
+  const viewabilityConfig = {
+    viewAreaCoveragePercentThreshold: 50,
+    minimumViewTime: 1000,
+  }
+
+  const onViewableItemsChanged = useCallback(({ viewableItems, changed }) => {
+    setVisibleReports(viewableItems.map((viewable) => viewable.item.uid))
+  }, [])
+
+  const viewabilityConfigCallbackPairs = useRef([
+    { viewabilityConfig, onViewableItemsChanged },
+  ])
+
   useEffect(() => {
     fetchAllReports()
   }, [])
@@ -55,6 +69,8 @@ export default function PopularFeed({ currentUser }) {
   return (
     <View style={{ position: "relative", flex: 1 }}>
       <FlatList
+        viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
+        viewabilityConfig={viewabilityConfig}
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         style={{ backgroundColor: Colors.lightGray }}
@@ -77,8 +93,15 @@ export default function PopularFeed({ currentUser }) {
             description={item.description}
             date={item.date}
             location={`${item.subdistrict}, ${item.district}, ${item.city}.`}
-            url={item.imageUrl}
+            url={
+              item?.type === "photo" || !item?.type
+                ? item.imageUrl
+                : item.videoUrl
+            }
+            type={item?.type}
             reportedAlot={item.many}
+            isVisible={visibleReports.includes(item.uid)}
+            thumbnail={item?.thumbnail}
           />
         )}
         refreshControl={

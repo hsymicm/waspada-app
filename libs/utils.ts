@@ -1,6 +1,3 @@
-// import { distance } from "fastest-levenshtein"
-import { useEffect, useMemo, useRef } from "react"
-
 export const scrollTop = (ref: any) => {
   if (ref?.current) {
     ref.current?.scrollTo({
@@ -61,15 +58,25 @@ export const formatElapsedTime = (timestamp: any) => {
 }
 
 export const parseMetadataTimestamp = (date: string) => {
-  const [datePart, timePart] = date.split(" ")
-  const [year, month, day] = datePart.split(":").map(Number)
-  const [hours, minutes, seconds] = timePart.split(":").map(Number)
+  if (date.includes("T")) {
+    const year = parseInt(date.slice(0, 4))
+    const month = parseInt(date.slice(4, 6)) - 1
+    const day = parseInt(date.slice(6, 8))
+    const hours = parseInt(date.slice(9, 11))
+    const minutes = parseInt(date.slice(11, 13))
+    const seconds = parseInt(date.slice(13, 15))
 
-  const parsedDate = new Date(year, month - 1, day, hours, minutes, seconds)
-  return parsedDate
+    return new Date(Date.UTC(year, month, day, hours, minutes, seconds))
+  } else {
+    const [datePart, timePart] = date.split(" ")
+    const [year, month, day] = datePart.split(":").map(Number)
+    const [hours, minutes, seconds] = timePart.split(":").map(Number)
+
+    return new Date(year, month - 1, day, hours, minutes, seconds)
+  }
 }
 
-export const formatTimestamp = (date: any) => {
+export const formatTimestamp = (date: Date) => {
   const monthNames = [
     "Januari",
     "Februari",
@@ -102,40 +109,3 @@ export const formatTimestamp = (date: any) => {
 export const kMToLongitudes = (km: number, atLatitude: number) => {
   return (km * 0.0089831) / Math.cos(atLatitude * (Math.PI / 180))
 }
-
-// export type FuzzySearchOptions = {
-//   limit?: number
-//   threshold?: number
-// }
-
-// export type FuzzySearchProps = {
-//   query: string
-//   array: string[]
-//   options?: FuzzySearchOptions
-// }
-
-// type Result = {
-//   item: string
-//   distance: number
-// }
-
-// export const fuzzySearch = (
-//   query: string,
-//   array: string[],
-//   options: FuzzySearchOptions = {}
-// ): string[] => {
-//   const { limit = array.length, threshold = 5 } = options
-
-//   const results: Result[] = array
-//     .map((item: any) => ({
-//       item,
-//       distance: distance(query, item.address.label),
-//     }))
-//     .filter((result) => result.distance <= threshold)
-//     .sort((a, b) => a.distance - b.distance)
-//     .slice(0, limit)
-
-//   console.log(query)
-
-//   return results.map((result) => result.item)
-// }

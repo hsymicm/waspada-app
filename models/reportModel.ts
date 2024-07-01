@@ -2,7 +2,6 @@ import {
   collection,
   getDocs,
   getDoc,
-  updateDoc,
   doc,
   limit,
   orderBy,
@@ -10,7 +9,6 @@ import {
   startAfter,
   serverTimestamp,
   Timestamp,
-  addDoc,
   runTransaction,
   startAt,
   endAt,
@@ -28,6 +26,8 @@ import {
   geohashQueryBounds,
 } from "geofire-common"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
+import * as Sharing from "expo-sharing"
+import * as FileSystem from "expo-file-system"
 
 export const getReports = {
   firstBatch: async function () {
@@ -92,7 +92,11 @@ export const getPopularReports = {
   firstBatch: async function () {
     try {
       const reportRef = collection(db, "reports")
-      const dataQuery = query(reportRef, orderBy("voteCounter", "desc"), limit(10))
+      const dataQuery = query(
+        reportRef,
+        orderBy("voteCounter", "desc"),
+        limit(10)
+      )
 
       const dataSnapshot = await getDocs(dataQuery)
       const lastVisible = dataSnapshot.docs[dataSnapshot.docs.length - 1]
@@ -230,19 +234,37 @@ export const getReportDetail = async (id: string) => {
   }
 }
 
-export const setReport = async (
-  currentUser: any,
-  address: string,
-  subdistrict: string,
-  district: string,
-  city: string,
-  county: string,
-  longitude: number,
-  latitude: number,
-  image: any,
-  description: string,
-  date: any
-) => {
+export type Report = {
+  currentUser: any
+  address: string
+  subdistrict: string
+  district: string
+  city: string
+  county: string
+  longitude: number
+  latitude: number
+  source: any
+  type: "photo" | "video"
+  description: string
+  date: Date
+  thumbnail?: any
+}
+
+export const setReport = async ({
+  currentUser,
+  address,
+  subdistrict,
+  district,
+  city,
+  county,
+  longitude,
+  latitude,
+  source,
+  type,
+  description,
+  date,
+  thumbnail,
+}: Report) => {
   if (!currentUser) {
     throw new Error("Error, invalid auth")
   }
@@ -255,8 +277,8 @@ export const setReport = async (
     throw new Error("Error, date is missing or invalid")
   }
 
-  if (!image) {
-    throw new Error("Error, image is missing or invalid")
+  if (!source) {
+    throw new Error("Error, source is missing or invalid")
   }
 
   if (!(longitude && latitude && address)) {
@@ -267,27 +289,49 @@ export const setReport = async (
 
   try {
     const hash = geohashForLocation([latitude, longitude])
+    let thumbnailDownloadUrl: any
 
-    const response = await fetch(image)
+    const response = await fetch(source)
 
     if (!response.ok) {
-      throw new Error("Failed to get image")
+      throw new Error("Failed to get source")
     }
 
     const blob = await response.blob()
 
-    const filename = image.substring(image.lastIndexOf("/") + 1)
-    const storageRef = ref(storage, `reports/images/report-${filename}`)
+    const filename = source.substring(source.lastIndexOf("/") + 1)
 
-    const storageSnapshot = await uploadBytes(storageRef, blob)
-    const downloadUrl = await getDownloadURL(storageSnapshot.ref)
+    const sourceStorageRef = ref(
+      storage,
+      `reports/${type === "video" ? "videos" : "images"}/report-${filename}`
+    )
+
+    const sourceStorageSnapshot = await uploadBytes(sourceStorageRef, blob)
+    const sourceDownloadUrl = await getDownloadURL(sourceStorageSnapshot.ref)
+
+    if (type === "video") {
+      const response = await fetch(thumbnail)
+      const blob = await response.blob()
+
+      const filename = source.substring(source.lastIndexOf("/") + 1).split(".")[0]
+      const thumbnailStorageRef = ref(
+        storage,
+        `reports/thumbnails/report-${filename}.jpg`
+      )
+
+      const thumbnailStorageSnapshot = await uploadBytes(
+        thumbnailStorageRef,
+        blob
+      )
+      thumbnailDownloadUrl = await getDownloadURL(thumbnailStorageSnapshot.ref)
+    }
 
     const batch = writeBatch(db)
 
     const userId = currentUser.uid
 
     const reportCollection = collection(db, "reports")
-    const reportRef = doc(reportCollection) 
+    const reportRef = doc(reportCollection)
     const reportId = reportRef.id
 
     const userRef = doc(db, "users", userId)
@@ -307,14 +351,16 @@ export const setReport = async (
       createdAt: serverTimestamp(),
       votedBy: {},
       voteCounter: 0,
-      imageUrl: downloadUrl,
+      type,
+      [type === "photo" ? "imageUrl" : "videoUrl"]: sourceDownloadUrl,
+      thumbnail: thumbnailDownloadUrl || null,
     })
 
     batch.update(userRef, {
-      reportHistory: arrayUnion(reportId)
+      reportHistory: arrayUnion(reportId),
     })
 
-    await batch.commit();
+    await batch.commit()
   } catch (error) {
     throw new Error(error.message || "An error has occured")
   }
@@ -395,3 +441,24 @@ export const checkVoteStatus = async (
     throw error
   }
 }
+
+export const downloadAndShareFile = async (fileUrl: string, fileName: string) => {
+  try {
+    const localUri = `${FileSystem.cacheDirectory}${fileName}`;
+    const downloadResumable = FileSystem.createDownloadResumable(
+      fileUrl,
+      localUri,
+      {},
+    );
+
+    const { uri } = await downloadResumable.downloadAsync();
+
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(uri);
+    } else {
+      throw new Error("Sharing is not available on this device");
+    }
+  } catch (error) {
+    throw new Error("Error downloading or sharing file:", error);
+  }
+};

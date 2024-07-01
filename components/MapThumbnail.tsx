@@ -3,10 +3,7 @@ import StyledIconButton from "./StyledIconButton"
 import { View, StyleSheet } from "react-native"
 import { useRef } from "react"
 import { Colors } from "../themes/Colors"
-import {
-  ArrowPathIcon,
-  ArrowsPointingOutIcon,
-} from "react-native-heroicons/solid"
+import { ArrowsPointingOutIcon } from "react-native-heroicons/solid"
 
 export default function MapThumbnail({ initialRegion, onExpand }) {
   const mapRef = useRef(null)

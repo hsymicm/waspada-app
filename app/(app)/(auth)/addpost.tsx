@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, Image, StyleSheet, Modal } from "react-native"
 import { Colors } from "../../../themes/Colors"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import StyledButton from "../../../components/StyledButton"
 import CameraScreen from "../../../components/CaptureScreen"
 import { StatusBar } from "expo-status-bar"
@@ -13,12 +13,13 @@ import {
 } from "../../../libs/utils"
 import MapThumbnail from "../../../components/MapThumbnail"
 import { revGeocode } from "../../../libs/geo"
-import { setReport } from "../../../models/reportModel"
+import { setReport, Report } from "../../../models/reportModel"
 import { useAuth } from "../../../contexts/AuthContext"
 import { router, useFocusEffect, useNavigation } from "expo-router"
-import { StackActions } from "@react-navigation/native"
+import { StackActions, useIsFocused } from "@react-navigation/native"
 import { Shadow } from "react-native-shadow-2"
 import MapModal from "../../../components/Modal/MapModal"
+import { ResizeMode, Video } from "expo-av"
 
 export default function AddPost() {
   const [isCameraModalVisible, setCameraModalVisible] = useState(false)
@@ -29,12 +30,15 @@ export default function AddPost() {
 
   const [data, setData] = useState({
     description: "",
-    image: null,
+    source: null,
+    thumbnail: null,
     location: null,
     timestamp: null,
   })
 
   const [isLoading, setLoading] = useState(false)
+
+  const focus = useIsFocused()
 
   const navigation = useNavigation()
   const { currentUser } = useAuth()
@@ -52,14 +56,24 @@ export default function AddPost() {
   }
 
   const handleSubmit = async () => {
-    if (
-      !(
-        data.description !== "" &&
-        data.image &&
-        data.location &&
-        data.timestamp
-      )
-    ) {
+    const { description, source, location, timestamp } = data
+    const { thumbnail } = source
+
+    const isValidImage =
+      description !== "" &&
+      source?.uri &&
+      location &&
+      timestamp &&
+      source.type === "photo"
+    const isValidVideo =
+      description !== "" &&
+      source?.uri &&
+      location &&
+      timestamp &&
+      source.type === "video" &&
+      thumbnail?.uri
+
+    if (!(isValidImage || isValidVideo)) {
       return
     }
 
@@ -74,22 +88,27 @@ export default function AddPost() {
         district,
         city,
         county,
-      } = data.location
+      } = location
+
       const parsedDate = parseMetadataTimestamp(data.timestamp.DateTime)
 
-      await setReport(
+      const report: Report = {
         currentUser,
         address,
         subdistrict,
         district,
         city,
         county,
-        GPSLongitude,
-        GPSLatitude,
-        data.image.uri,
-        data.description,
-        parsedDate
-      )
+        longitude: GPSLongitude,
+        latitude: GPSLatitude,
+        source: source.uri,
+        type: source.type,
+        description,
+        date: parsedDate,
+        thumbnail: source.type === "photo" ? null : thumbnail.uri,
+      }
+
+      await setReport(report)
 
       if (navigation.canGoBack()) {
         navigation.dispatch(StackActions.popToTop())
@@ -99,22 +118,22 @@ export default function AddPost() {
       setLoading(false)
     } catch (error) {
       console.log(error)
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      setResult(null)
-      setData({
-        description: "",
-        image: null,
-        location: null,
-        timestamp: null,
-      })
-    }, [])
-  )
+  useEffect(() => {
+    setResult(null)
+    setInitialRegion(null)
+    setData({
+      description: "",
+      source: null,
+      thumbnail: null,
+      location: null,
+      timestamp: null,
+    })
+  }, [focus])
 
   useEffect(() => {
     const subscribe = async () => {
@@ -132,7 +151,7 @@ export default function AddPost() {
 
         setData({
           ...data,
-          image: result,
+          source: result,
           location: {
             GPSLatitude,
             GPSAltitude,
@@ -190,19 +209,7 @@ export default function AddPost() {
         >
           <View style={styles.container}>
             <View style={{ flex: 1, aspectRatio: 1 }}>
-              <Image
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: 16,
-                }}
-                resizeMode="cover"
-                source={
-                  !data.image
-                    ? require("../../../assets/temp.jpg")
-                    : { uri: data.image.uri }
-                }
-              />
+              <Thumbnail data={data} />
             </View>
             <View
               style={{
@@ -222,9 +229,8 @@ export default function AddPost() {
                 onPress={imagePicker}
               /> */}
             </View>
-            {data.image && data.location && data.timestamp && (
+            {data.source && data.location && data.timestamp && (
               <View style={styles.detailContainer}>
-                {/* <Text>{JSON.stringify(result)}</Text> */}
                 <View style={{ display: "flex", gap: 8 }}>
                   <Text style={styles.inputLabel}>Deskripsi</Text>
                   <TextInputField
@@ -263,24 +269,65 @@ export default function AddPost() {
             )}
           </View>
         </ScrollView>
-        <Shadow
-          style={{ width: "100%" }}
-          offset={[0, -1]}
-          distance={8}
-          startColor={Colors.shadow}
-        >
-          <View style={styles.footerContainer}>
-            <StyledButton
-              loading
-              disabled={isLoading}
-              onPress={handleSubmit}
-              title="Tambah Laporan"
-            />
-          </View>
-        </Shadow>
+        {data.source && data.location && data.timestamp && (
+          <Shadow
+            style={{ width: "100%" }}
+            offset={[0, -1]}
+            distance={8}
+            startColor={Colors.shadow}
+          >
+            <View style={styles.footerContainer}>
+              <StyledButton
+                loading
+                disabled={isLoading}
+                onPress={handleSubmit}
+                title="Tambah Laporan"
+              />
+            </View>
+          </Shadow>
+        )}
       </View>
     </>
   )
+}
+
+function Thumbnail({ data }) {
+  const videoRef = useRef(null)
+
+  if (!data.source?.type && !data.source?.uri) {
+    return (
+      <Image
+        style={styles.previewThumbnail}
+        resizeMode="cover"
+        source={require("../../../assets/temp.jpg")}
+      />
+    )
+  }
+
+  if (data.source?.uri && data.source?.type === "photo") {
+    return (
+      <Image
+        style={styles.previewThumbnail}
+        resizeMode="cover"
+        source={{ uri: data.source.uri }}
+      />
+    )
+  }
+
+  if (data.source?.uri && data.source?.type === "video") {
+    return (
+      <Video
+        ref={videoRef}
+        source={{
+          uri: data.source.uri,
+        }}
+        onLoad={() => videoRef.current.playAsync()}
+        resizeMode={ResizeMode.COVER}
+        isLooping
+        style={styles.previewThumbnail}
+      />
+    )
+  }
 }
 
 const styles = StyleSheet.create({
@@ -343,5 +390,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderTopWidth: 1,
     borderColor: Colors.lightGray,
+  },
+
+  previewThumbnail: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 16,
   },
 })

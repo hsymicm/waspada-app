@@ -8,6 +8,7 @@ import { AuthProvider } from "../contexts/AuthContext"
 import { Camera } from "expo-camera"
 import * as Location from "expo-location"
 import * as ImagePicker from "expo-image-picker"
+import 'react-native-get-random-values'
 
 export const unstable_settings = {
   initialRouteName: "signin",

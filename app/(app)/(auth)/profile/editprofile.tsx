@@ -14,6 +14,7 @@ import StyledButton from "../../../../components/StyledButton"
 import { Shadow } from "react-native-shadow-2"
 import TextSkeleton from "../../../../components/Skeleton/TextSkeleton"
 import * as ImagePicker from "expo-image-picker"
+import { Image as ImageCompressor } from "react-native-compressor"
 
 export default function EditProfile() {
   const [profile, setProfile] = useState(null)
@@ -79,6 +80,19 @@ export default function EditProfile() {
 
     try {
       const updatedFields = getUpdatedFields(profile, editProfile)
+      
+      const profilePicture = updatedFields?.profilePicture
+
+      if (profilePicture) {
+        const compress =  await ImageCompressor.compress(profilePicture, {
+          maxHeight: 960,
+          maxWidth: 960,
+          returnableOutputType: "uri",
+        })
+
+        updatedFields.profilePicture = compress
+      }
+
       await updateUserProfile(currentUser, updatedFields)
       await fetchProfile()
     } catch (error) {
@@ -235,7 +249,7 @@ export default function EditProfile() {
                 paddingBottom: 16,
               }}
             >
-              Daftar Pada{" "}
+              Daftar pada{" "}
               <Text style={{ fontFamily: "Nunito-Bold" }}>
                 {formatTimestamp(profile.createdAt.toDate())}
               </Text>

@@ -3,20 +3,21 @@ import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native"
 import {
   ShareIcon,
   BookmarkIcon,
-  BookmarkSlashIcon,
   MapPinIcon as Pin,
+  PlayIcon,
 } from "react-native-heroicons/solid"
 import { BookmarkIcon as BookmarkIconOutline } from "react-native-heroicons/outline"
 import { Colors } from "../themes/Colors"
 import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
-import VoteCounter from "./VoteCounter"
 import { useAuth } from "../contexts/AuthContext"
+import { memo, useEffect, useState } from "react"
 import {
   handleArchiveReport,
   hasUserArchivedReport,
 } from "../models/profileModel"
-import { useEffect, useState } from "react"
+import VoteCounter from "./VoteCounter"
+import { downloadAndShareFile } from "../models/reportModel"
 
 interface CardProps {
   id: string
@@ -25,7 +26,10 @@ interface CardProps {
   description: string
   rating: number
   url: string
+  thumbnail?: string
   reportedAlot: boolean
+  isVisible?: boolean
+  type: "photo" | "video" | null
 }
 
 function Card({
@@ -36,9 +40,12 @@ function Card({
   rating,
   url,
   reportedAlot,
+  type,
+  thumbnail,
 }: CardProps) {
   const { currentUser } = useAuth()
   const [hasArchived, setHasArchived] = useState(false)
+  const [isLoading, setLoading] = useState(false)
 
   useEffect(() => {
     const checkUserHasArchived = async () => {
@@ -57,6 +64,7 @@ function Card({
   }, [currentUser, id])
 
   const handleArchiveSubmit = async () => {
+    setLoading(true)
     try {
       await handleArchiveReport(
         currentUser,
@@ -66,6 +74,20 @@ function Card({
       setHasArchived(!hasArchived)
     } catch (error) {
       console.log(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleShare = async (url: string, filename: string) => {
+    setLoading(true)
+    try {
+      console.log("sharing...")
+      await downloadAndShareFile(url, filename)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -107,7 +129,10 @@ function Card({
           <View style={styles.footerContainer}>
             <View style={styles.actionContainer}>
               <TouchableWithoutFeedback
-                onPress={() => console.log("Share Pressed")}
+                onPress={() =>
+                  handleShare(url, `${id}.${type === "video" ? "mp4" : "jpg"}`)
+                }
+                disabled={isLoading}
               >
                 <View style={{ padding: 8 }}>
                   <ShareIcon size={16} color={Colors.white} />
@@ -115,6 +140,7 @@ function Card({
               </TouchableWithoutFeedback>
               <TouchableWithoutFeedback
                 onPress={handleArchiveSubmit}
+                disabled={isLoading}
               >
                 <View style={{ padding: 8 }}>
                   {hasArchived ? (
@@ -133,8 +159,30 @@ function Card({
             />
           </View>
         </LinearGradient>
+        {type !== "photo" && type && (
+          <View
+            style={{
+              position: "absolute",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              height: "100%",
+              zIndex: 2,
+            }}
+          >
+            <View
+              style={{
+                padding: 24,
+                borderRadius: 99,
+                backgroundColor: "#00000064",
+              }}
+            >
+              <PlayIcon size={32} color={Colors.white} />
+            </View>
+          </View>
+        )}
         <ExpoImage
-          source={url}
+          source={type === "photo" || !type ? url : thumbnail}
           contentFit="cover"
           style={styles.image}
           transition={500}
@@ -241,7 +289,6 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    // resizeMode: "cover",
     position: "absolute",
     left: 0,
     top: 0,
@@ -250,4 +297,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default Card
+export default memo(Card)

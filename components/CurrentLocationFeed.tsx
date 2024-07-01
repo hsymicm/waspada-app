@@ -11,7 +11,7 @@ import {
 import { Colors } from "../themes/Colors"
 import { MapPinIcon as Pin, PlusIcon } from "react-native-heroicons/solid"
 
-import { getReports, getReportsByLocation } from "../models/reportModel"
+import { getReportsByLocation } from "../models/reportModel"
 import { useLocalSearchParams } from "expo-router"
 
 import Card from "../components/Card"
@@ -40,7 +40,10 @@ function LocationComponent({
             {address}
           </Text>
         ) : (
-          <TextSkeleton style={{ marginBottom: 8, height: 24, width: "90%" }} isLoading={loading} />
+          <TextSkeleton
+            style={{ marginBottom: 8, height: 24, width: "90%" }}
+            isLoading={loading}
+          />
         )}
         {!loading ? (
           <Text style={styles.subHeading}>
@@ -59,7 +62,6 @@ export default function CurrentLocationFeed({ currentUser }) {
   const { _filter, _search }: any = useLocalSearchParams()
 
   const [reports, setReports] = useState([])
-  const [lastReport, setLastReport] = useState(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [isRefresh, setRefresh] = useState<boolean>(false)
 
@@ -107,12 +109,14 @@ export default function CurrentLocationFeed({ currentUser }) {
   const getLocationBySearch = async (searchLocation: string | null) => {
     try {
       const response = await geocode({ location: searchLocation })
-      
-      const { address, position } = response?.items ? response.items[0] : response
-      
+
+      const { address, position } = response?.items
+        ? response.items[0]
+        : response
+
       const formattedAddress = formatAddress(address)
       setcurrentAddress(formattedAddress)
-      
+
       return { latitude: position.lat, longitude: position.lng }
     } catch (error) {
       throw new Error(error || "Error, something happened")
@@ -135,7 +139,7 @@ export default function CurrentLocationFeed({ currentUser }) {
       const response = await getReportsByLocation({
         lat: coords.latitude,
         lng: coords.longitude,
-        radiusInKm: 10,
+        radiusInKm: 5,
       })
 
       setReports(response)
@@ -148,7 +152,6 @@ export default function CurrentLocationFeed({ currentUser }) {
   const onRefresh = async () => {
     setRefresh(true)
     setReports([])
-    setLastReport(null)
     await fetchNearbyReports(_search)
     setRefresh(false)
   }
@@ -187,7 +190,7 @@ export default function CurrentLocationFeed({ currentUser }) {
         ListFooterComponent={
           <CardSkeleton
             isLoading={isLoading}
-            firstLoad={lastReport ? false : true}
+            firstLoad={true}
           />
         }
         renderItem={({ item }) =>
@@ -198,8 +201,14 @@ export default function CurrentLocationFeed({ currentUser }) {
               description={item.description}
               date={item.date}
               location={`${item.subdistrict}, ${item.district}, ${item.city}.`}
-              url={item.imageUrl}
+              url={
+                item?.type === "photo" || !item?.type
+                  ? item.imageUrl
+                  : item.videoUrl
+              }
+              type={item?.type}
               reportedAlot={item.many}
+              thumbnail={item?.thumbnail}
             />
           ) : null
         }

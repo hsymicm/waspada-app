@@ -8,7 +8,7 @@ import {
 } from "react-native"
 import { Colors } from "../../../../themes/Colors"
 import { useAuth } from "../../../../contexts/AuthContext"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
   router,
   useFocusEffect,
@@ -92,11 +92,11 @@ export default function Profile() {
     }
   }
 
-  useFocusEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (currentUser) {
       fetchProfile()
     }
-  })
+  }, []))
 
   return (
     <ScrollView

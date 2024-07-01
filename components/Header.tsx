@@ -15,10 +15,16 @@ import {
   Bars3Icon as Hamburger,
 } from "react-native-heroicons/solid"
 import { Shadow } from "react-native-shadow-2"
-import { router } from "expo-router"
-import { useEffect, useState } from "react"
+import { router, useFocusEffect } from "expo-router"
+import { useCallback, useEffect, useState } from "react"
 import { geoAutosuggest } from "../libs/geo"
 import SuggestionList from "./SuggestionList"
+import {
+  deleteSearchHistory,
+  getSearchHistory,
+  setSearchHistory,
+  sortHistoryByTimestamp,
+} from "../models/searchHistoryModel"
 
 interface HeaderProps {
   children?: any
@@ -43,6 +49,7 @@ export default function Header({
 }: HeaderProps) {
   const [value, setValue] = useState("")
   const [currentLocation, setCurrentLocation] = useState(null)
+  const [history, setHistory] = useState(null)
   const [suggestion, setSuggestion] = useState(null)
   const [isSuggesting, setSuggesting] = useState(false)
 
@@ -65,19 +72,40 @@ export default function Header({
     }
   }
 
-  const handleSearchSubmit = (search: any) => {
+  const fetchSearchHistory = async () => {
+    const result = await getSearchHistory()
+    setHistory(sortHistoryByTimestamp(result))
+  }
+
+  const handleDeleteSearchHistory = async (uid: string) => {
+    await deleteSearchHistory(uid)
+    await fetchSearchHistory()
+  }
+
+  const handleSearchSubmit = async (search: any) => {
     try {
+      setSuggesting(false)
+      Keyboard.dismiss()
+      
       router.setParams({
         _search: search?.id ? search.id : search.address.label,
         _filter: "near",
       })
-      Keyboard.dismiss()
+      
+      await setSearchHistory(search)
+      await fetchSearchHistory()
+      
       setSuggestion(null)
       setValue("")
+      
     } catch (error) {
       console.log(error)
     }
   }
+
+  useEffect(() => {
+    fetchSearchHistory()
+  }, [])
 
   useEffect(() => {
     if (value === "") {
@@ -100,7 +128,7 @@ export default function Header({
       if (value && currentLocation) {
         fetchSuggestion(value, currentLocation)
       }
-    }, 1000)
+    }, 500)
 
     return () => clearTimeout(getSuggestion)
   }, [value])
@@ -131,13 +159,16 @@ export default function Header({
                     value={value}
                     setValue={setValue}
                     onSubmit={(val: any) => handleSearchSubmit(val)}
-                    active={(val: boolean) => setSuggesting(val)}
+                    onActive={(val: boolean) => setSuggesting(val)}
                     placeholder="Cari lokasi"
                   />
-                  {suggestion && value && isSuggesting && (
+                  {isSuggesting && (
                     <SuggestionList
                       getValue={(val: any) => handleSearchSubmit(val)}
                       suggestion={suggestion?.items}
+                      history={history}
+                      deleteHistory={handleDeleteSearchHistory}
+                      searchValue={value}
                     />
                   )}
                 </>
