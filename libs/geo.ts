@@ -24,14 +24,16 @@ export const geocode = async ({ location }: { location: string }) => {
   const arr = location.split(":")
   let url: string
 
+  const key = process.env.HERE_API_KEY
+
   if (arr[0] === "here") {
     url = `https://lookup.search.hereapi.com/v1/lookup?id=${encodeURI(
       location
-    )}&apiKey=${process.env.HERE_API_KEY}`
+    )}&apiKey=${key}`
   } else {
     url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURI(
       location
-    )}&apiKey=${process.env.HERE_API_KEY}`
+    )}&apiKey=${key}`
   }
 
   try {
