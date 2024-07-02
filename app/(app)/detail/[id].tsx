@@ -37,8 +37,6 @@ import {
 } from "../../../models/profileModel"
 import { StatusBar } from "expo-status-bar"
 import VideoModal from "../../../components/Modal/VideoModal"
-import { useFocusEffect, useIsFocused } from "@react-navigation/native"
-import { ResizeMode, Video } from "expo-av"
 import VideoPlayer from "../../../components/VideoPlayer"
 
 function DetailPost() {
@@ -57,7 +55,6 @@ function DetailPost() {
   const [mapModalVisible, setMapModalVisible] = useState(false)
 
   const { currentUser } = useAuth()
-  const isFocus = useIsFocused()
 
   const fetchReportDetail = async (id: any) => {
     setLoading(true)
