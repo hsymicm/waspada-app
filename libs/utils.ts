@@ -76,7 +76,7 @@ export const parseMetadataTimestamp = (date: string) => {
   }
 }
 
-export const formatTimestamp = (date: Date) => {
+export const formatTimestamp = (date: Date, showTime: boolean = true) => {
   const monthNames = [
     "Januari",
     "Februari",
@@ -103,6 +103,9 @@ export const formatTimestamp = (date: Date) => {
   hours = hours % 12
   hours = hours ? hours : 12
 
+  if (!showTime) {
+    return `${month} ${day}, ${year}`
+  }
   return `${month} ${day}, ${year} - ${hours}:${minutes} ${ampm}`
 }
 
