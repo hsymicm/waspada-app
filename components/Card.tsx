@@ -18,16 +18,17 @@ import {
 } from "../models/profileModel"
 import VoteCounter from "./VoteCounter"
 import { downloadAndShareFile } from "../models/reportModel"
+import { formatElapsedTime, formatTimestamp } from "../libs/utils"
 
 interface CardProps {
   id: string
   location: string
-  date: string
+  date: Date
   description: string
   rating: number
   url: string
   thumbnail?: string
-  reportedAlot: boolean
+  isDateElapsed?: boolean
   isVisible?: boolean
   type: "photo" | "video" | null
 }
@@ -39,9 +40,9 @@ function Card({
   description,
   rating,
   url,
-  reportedAlot,
   type,
   thumbnail,
+  isDateElapsed,
 }: CardProps) {
   const { currentUser } = useAuth()
   const [hasArchived, setHasArchived] = useState(false)
@@ -110,18 +111,17 @@ function Card({
               {location}
             </Text>
           </View>
-          {reportedAlot && (
-            <View style={styles.reportIndicator}>
-              <Text style={styles.reportIndicatorText}>Banyak Laporan</Text>
-            </View>
-          )}
         </LinearGradient>
         <LinearGradient
           colors={["transparent", "rgba(0,0,0, 0.8)"]}
           style={styles.infoContainer}
         >
           <View style={styles.dateContainer}>
-            <Text style={styles.dateText}>{date}</Text>
+            <Text style={styles.dateText}>
+              {isDateElapsed
+                ? formatElapsedTime(date)
+                : formatTimestamp(date, { showDay: true })}
+            </Text>
           </View>
           <Text numberOfLines={2} style={styles.description}>
             {description}

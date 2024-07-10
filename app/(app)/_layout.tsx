@@ -1,8 +1,8 @@
 import { Redirect } from "expo-router"
 import { useEffect, useState } from "react"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { Drawer } from "expo-router/drawer"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import Header from "../../components/Header"
 import ContentFilter from "../../components/ContentFilter"
 import CustomDrawer from "../../components/CustomDrawer"
@@ -10,7 +10,6 @@ import CustomDrawer from "../../components/CustomDrawer"
 export default function AppLayout() {
   const [notFirstTime, setNotFirstTime] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
 
   const checkFirstLogin = async () => {
     try {
@@ -53,16 +52,13 @@ export default function AppLayout() {
             header: ({ navigation }) => (
               <Header
                 title="Beranda"
-                value={search}
                 navigation={navigation}
-                setValue={setSearch}
                 searchBarShown
               >
                 <ContentFilter />
               </Header>
             ),
           }}
-          initialParams={{ search }}
         />
         <Drawer.Screen
           name="detail/[id]"

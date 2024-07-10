@@ -5,14 +5,14 @@ import {
   ActivityIndicator,
 } from "react-native"
 import { Colors } from "../themes/Colors"
-import { useState } from "react"
+import { ReactNode, useState } from "react"
 
 interface StyledButtonProps {
   title: string
   variant?: "primary" | "secondary"
   size?: "small" | "normal"
-  iconLeft?: any
-  iconRight?: any
+  iconLeft?: ReactNode
+  iconRight?: ReactNode
   style?: object
   textStyle?: object
   disabled?: boolean

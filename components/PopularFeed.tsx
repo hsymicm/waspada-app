@@ -11,7 +11,7 @@ import {
 import { Colors } from "../themes/Colors"
 import { PlusIcon } from "react-native-heroicons/solid"
 
-import { getPopularReports } from "../models/reportModel"
+import { getReports } from "../models/reportModel"
 import Card from "../components/Card"
 import CardSkeleton from "../components/Skeleton/CardSkeleton"
 import { router } from "expo-router"
@@ -26,7 +26,9 @@ export default function PopularFeed({ currentUser }) {
 
   const fetchAllReports = async () => {
     setLoading(true)
-    const res = await getPopularReports.firstBatch()
+    const res = await getReports.firstBatch({
+      order: "voteCounter"
+    })
     setReports(res.data)
     setLastReport(res.lastKey)
     setLoading(false)
@@ -34,7 +36,7 @@ export default function PopularFeed({ currentUser }) {
   const onEnd = async () => {
     if (!isLoading && lastReport) {
       setLoading(true)
-      const res = await getPopularReports.nextBatch(lastReport)
+      const res = await getReports.nextBatch(lastReport)
       setReports([...reports, ...res.data])
       setLastReport(res.lastKey ? res.lastKey : null)
       setLoading(false)
@@ -99,7 +101,6 @@ export default function PopularFeed({ currentUser }) {
                 : item.videoUrl
             }
             type={item?.type}
-            reportedAlot={item.many}
             isVisible={visibleReports.includes(item.uid)}
             thumbnail={item?.thumbnail}
           />

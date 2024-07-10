@@ -14,6 +14,7 @@ import {
   endAt,
   writeBatch,
   arrayUnion,
+  where,
 } from "firebase/firestore"
 import {
   FIREBASE_DB as db,
@@ -29,11 +30,37 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import * as Sharing from "expo-sharing"
 import * as FileSystem from "expo-file-system"
 
+interface getReportsTypes {
+  order?: "date" | "voteCounter"
+  filter?: "date"
+}
+
+const getStartEndTimestamp = (date: Date) => {
+  if (!date) {
+    throw new Error("Error, missing or invalid date")
+  }
+
+  try {
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const startTimestamp = Timestamp.fromDate(startOfDay)
+    const endTimestamp = Timestamp.fromDate(endOfDay)
+
+    return { start: startTimestamp, end: endTimestamp }
+  } catch (error) {
+    throw new Error(error?.message || "An error has occured")
+  }
+}
+
 export const getReports = {
-  firstBatch: async function () {
+  firstBatch: async function ({ order, filter }: getReportsTypes) {
     try {
       const reportRef = collection(db, "reports")
-      const dataQuery = query(reportRef, orderBy("date", "desc"), limit(10))
+      const dataQuery = query(reportRef, orderBy(order, "desc"), limit(10))
 
       const dataSnapshot = await getDocs(dataQuery)
       const lastVisible = dataSnapshot.docs[dataSnapshot.docs.length - 1]
@@ -88,13 +115,104 @@ export const getReports = {
   },
 }
 
-export const getPopularReports = {
-  firstBatch: async function () {
+export const getReportsByLocation = async ({
+  lat,
+  lng,
+  radiusInKm,
+  date,
+}: {
+  lat: number
+  lng: number
+  radiusInKm: number
+  date?: Date | null
+}) => {
+  try {
+    const center: any = [lat, lng]
+    const radius: number = radiusInKm * 1000
+    const bounds = geohashQueryBounds(center, radius)
+
+    const promises = []
+
+    for (const b of bounds) {
+      if (date) {
+        const { start, end } = getStartEndTimestamp(date)
+        const q = query(
+          collection(db, "reports"),
+          where("date", ">=", start),
+          where("date", "<=", end),
+          orderBy("hash"),
+          startAt(b[0]),
+          endAt(b[1])
+        )
+        promises.push(getDocs(q))
+      } else {
+        const q = query(
+          collection(db, "reports"),
+          orderBy("hash"),
+          startAt(b[0]),
+          endAt(b[1])
+        )
+        promises.push(getDocs(q))
+      }
+    }
+
+    const snapshots = await Promise.all(promises)
+    const matchingDocs = []
+
+    for (const snap of snapshots) {
+      for (const doc of snap.docs) {
+        const latitude = doc.get("latitude")
+        const longitude = doc.get("longitude")
+
+        const distanceInKm = distanceBetween([latitude, longitude], center)
+        const distanceInM = distanceInKm * 1000
+        if (distanceInM <= radius) {
+          const reportData = doc.data()
+          const timestamp = reportData.date.toDate()
+          matchingDocs.push({
+            ...reportData,
+            date: timestamp,
+            uid: doc.id,
+            distance: distanceInM,
+          })
+        }
+      }
+    }
+
+    matchingDocs.sort((a, b) => {
+      return b.date - a.date
+    })
+
+    return matchingDocs
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const getReportsByDate = {
+  firstBatch: async function (date: string) {
+    if (!date) {
+      throw new Error("Error, missing or invalid date")
+    }
+
     try {
+      const targetDate = new Date(date)
+
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const startTimestamp = Timestamp.fromDate(startOfDay)
+      const endTimestamp = Timestamp.fromDate(endOfDay)
+
       const reportRef = collection(db, "reports")
       const dataQuery = query(
         reportRef,
-        orderBy("voteCounter", "desc"),
+        where("date", ">=", startTimestamp),
+        where("date", "<=", endTimestamp),
+        orderBy("date", "desc"),
         limit(10)
       )
 
@@ -113,20 +231,36 @@ export const getPopularReports = {
 
       return { data: arr, lastKey: lastVisible }
     } catch (error) {
-      throw new Error(error.message || "An error has occured")
+      throw new Error(error?.message || "An error has occured")
     }
   },
 
-  nextBatch: async function (key: string) {
+  nextBatch: async function (date: string, key: string) {
     if (!key) {
       throw new Error("Error, key is missing or invalid")
     }
 
+    if (!date) {
+      throw new Error("Error, missing or invalid date")
+    }
+
     try {
+      const targetDate = new Date(date)
+
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const startTimestamp = Timestamp.fromDate(startOfDay)
+      const endTimestamp = Timestamp.fromDate(endOfDay)
+
       const reportRef = collection(db, "reports")
       const dataQuery = query(
         reportRef,
-        orderBy("voteCounter", "desc"),
+        where("date", ">=", startTimestamp),
+        where("date", "<=", endTimestamp),
+        orderBy("date", "desc"),
         startAfter(key),
         limit(10)
       )
@@ -146,70 +280,9 @@ export const getPopularReports = {
 
       return { data: arr, lastKey: lastVisible }
     } catch (error) {
-      throw new Error(error.message || "An error has occured")
+      throw new Error(error?.message || "An error has occured")
     }
   },
-}
-
-export const getReportsByLocation = async ({
-  lat,
-  lng,
-  radiusInKm,
-}: {
-  lat: number
-  lng: number
-  radiusInKm: number
-}) => {
-  try {
-    const center: any = [lat, lng]
-    const radius: number = radiusInKm * 1000
-    const bounds = geohashQueryBounds(center, radius)
-
-    const promises = []
-
-    for (const b of bounds) {
-      const q = query(
-        collection(db, "reports"),
-        orderBy("hash"),
-        startAt(b[0]),
-        endAt(b[1])
-        // limit(5)
-      )
-      promises.push(getDocs(q))
-    }
-
-    const snapshots = await Promise.all(promises)
-    const matchingDocs = []
-
-    for (const snap of snapshots) {
-      for (const doc of snap.docs) {
-        const latitude = doc.get("latitude")
-        const longitude = doc.get("longitude")
-
-        const distanceInKm = distanceBetween([latitude, longitude], center)
-        const distanceInM = distanceInKm * 1000
-        if (distanceInM <= radius) {
-          const reportData = doc.data()
-          const timestamp = reportData.date
-          matchingDocs.push({
-            ...reportData,
-            date: formatElapsedTime(timestamp),
-            time: timestamp.toDate(),
-            uid: doc.id,
-            distance: distanceInM,
-          })
-        }
-      }
-    }
-
-    matchingDocs.sort((a, b) => {
-      return b.time - a.time
-    })
-
-    return matchingDocs
-  } catch (error) {
-    console.log(error)
-  }
 }
 
 export const getReportDetail = async (id: string) => {
@@ -224,13 +297,13 @@ export const getReportDetail = async (id: string) => {
 
     if (reportSnapshot.exists()) {
       const data = reportSnapshot.data()
-      const date = formatTimestamp(data.date.toDate())
+      const date = data.date.toDate()
       return { uid: reportSnapshot.id, ...data, date }
     } else {
       return null
     }
   } catch (error) {
-    throw new Error(error.message || "An error has occured")
+    throw new Error(error?.message || "An error has occured")
   }
 }
 
@@ -313,7 +386,9 @@ export const setReport = async ({
       const response = await fetch(thumbnail)
       const blob = await response.blob()
 
-      const filename = source.substring(source.lastIndexOf("/") + 1).split(".")[0]
+      const filename = source
+        .substring(source.lastIndexOf("/") + 1)
+        .split(".")[0]
       const thumbnailStorageRef = ref(
         storage,
         `reports/thumbnails/report-${filename}.jpg`
@@ -362,7 +437,7 @@ export const setReport = async ({
 
     await batch.commit()
   } catch (error) {
-    throw new Error(error.message || "An error has occured")
+    throw new Error(error?.message || "An error has occured")
   }
 }
 
@@ -442,23 +517,26 @@ export const checkVoteStatus = async (
   }
 }
 
-export const downloadAndShareFile = async (fileUrl: string, fileName: string) => {
+export const downloadAndShareFile = async (
+  fileUrl: string,
+  fileName: string
+) => {
   try {
-    const localUri = `${FileSystem.cacheDirectory}${fileName}`;
+    const localUri = `${FileSystem.cacheDirectory}${fileName}`
     const downloadResumable = FileSystem.createDownloadResumable(
       fileUrl,
       localUri,
-      {},
-    );
+      {}
+    )
 
-    const { uri } = await downloadResumable.downloadAsync();
+    const { uri } = await downloadResumable.downloadAsync()
 
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri);
+      await Sharing.shareAsync(uri)
     } else {
-      throw new Error("Sharing is not available on this device");
+      throw new Error("Sharing is not available on this device")
     }
   } catch (error) {
-    throw new Error("Error downloading or sharing file:", error);
+    throw new Error("Error downloading or sharing file:", error)
   }
-};
+}

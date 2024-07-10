@@ -26,7 +26,9 @@ export default function AllFeed({ currentUser }) {
 
   const fetchData = async () => {
     setLoading(true)
-    const res = await getReports.firstBatch()
+    const res = await getReports.firstBatch({
+      order: "date"
+    })
     setReports(res.data)
     setLastReport(res.lastKey)
     setLoading(false)
@@ -99,7 +101,6 @@ export default function AllFeed({ currentUser }) {
                 : item.videoUrl
             }
             type={item?.type}
-            reportedAlot={item.many}
             isVisible={visibleReports.includes(item.uid)}
             thumbnail={item?.thumbnail}
           />

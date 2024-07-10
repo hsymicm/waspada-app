@@ -38,6 +38,7 @@ import {
 import { StatusBar } from "expo-status-bar"
 import VideoModal from "../../../components/Modal/VideoModal"
 import VideoPlayer from "../../../components/VideoPlayer"
+import { formatTimestamp } from "../../../libs/utils"
 
 function DetailPost() {
   const { id }: any = useLocalSearchParams()
@@ -239,7 +240,9 @@ function DetailPost() {
                 <Text style={styles.detailLabel}>Waktu</Text>
                 {!isLoading && reportDetail ? (
                   <Text style={styles.detailParagraph}>
-                    {reportDetail.date}
+                    {formatTimestamp(reportDetail.date, {
+                      showDay: true, showTime: true
+                    })}
                   </Text>
                 ) : (
                   <TextSkeleton isLoading={isLoading} />

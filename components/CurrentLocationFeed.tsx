@@ -59,7 +59,7 @@ function LocationComponent({
 }
 
 export default function CurrentLocationFeed({ currentUser }) {
-  const { _filter, _search }: any = useLocalSearchParams()
+  const { _filter, _search, _date }: any = useLocalSearchParams()
 
   const [reports, setReports] = useState([])
   const [isLoading, setLoading] = useState<boolean>(false)
@@ -123,12 +123,18 @@ export default function CurrentLocationFeed({ currentUser }) {
     }
   }
 
-  const fetchNearbyReports = async (searchLocation?: string | null) => {
+  const fetchNearbyReports = async (searchLocation?: string | null, date?: string | null) => {
     setReports([])
     setLoading(true)
 
     try {
       let coords: any
+
+      console.log(`Date String: ${date}`)
+
+      const dateFilter = date && date !== "" ? new Date(date) : null
+
+      console.log(dateFilter)
 
       if (searchLocation && searchLocation !== "") {
         coords = await getLocationBySearch(searchLocation)
@@ -140,6 +146,7 @@ export default function CurrentLocationFeed({ currentUser }) {
         lat: coords.latitude,
         lng: coords.longitude,
         radiusInKm: 5,
+        date: dateFilter,
       })
 
       setReports(response)
@@ -157,8 +164,8 @@ export default function CurrentLocationFeed({ currentUser }) {
   }
 
   useEffect(() => {
-    fetchNearbyReports(_search)
-  }, [_filter, _search])
+    fetchNearbyReports(_search, _date)
+  }, [_filter, _search, _date])
 
   if (!locationPermission) {
     return <View />
@@ -207,7 +214,7 @@ export default function CurrentLocationFeed({ currentUser }) {
                   : item.videoUrl
               }
               type={item?.type}
-              reportedAlot={item.many}
+              isDateElapsed={_date && _date !== "" ? false : true}
               thumbnail={item?.thumbnail}
             />
           ) : null

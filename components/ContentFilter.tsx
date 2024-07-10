@@ -8,10 +8,7 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
 } from "react-native"
-import {
-  CalendarIcon,
-  XMarkIcon,
-} from "react-native-heroicons/solid"
+import { CalendarIcon, XMarkIcon } from "react-native-heroicons/solid"
 import StyledButton from "./StyledButton"
 import { Colors } from "../themes/Colors"
 import { router, useLocalSearchParams } from "expo-router"
@@ -21,19 +18,23 @@ import { formatTimestamp } from "../libs/utils"
 
 export default function ContentFilter({}) {
   const { _filter, _search } = useLocalSearchParams()
-  const [date, setDate] = useState(null)
+  const [date, setDate] = useState<Date | null>(null)
   const [displayDate, setDisplayDate] = useState(null)
   const [dateModalVisible, setDateModalVisible] = useState(false)
 
   const handleSubmitDate = () => {
-    setDateModalVisible(false)
-    setDisplayDate(date)
+    if (date) {
+      setDateModalVisible(false)
+      setDisplayDate(date)
+      router.setParams({ _date: date.toISOString() })
+    }
   }
 
   const handleResetDate = () => {
     if (displayDate) {
       setDisplayDate(null)
       setDateModalVisible(false)
+      router.setParams({ _date: "" })
     }
     setDate(null)
   }
@@ -104,12 +105,14 @@ export default function ContentFilter({}) {
                   yearTitleStyle={styles.monthYearStyle}
                 />
                 <View style={{ display: "flex", padding: 16, gap: 8 }}>
-                  <StyledButton
-                    title="Pilih Tanggal"
-                    style={{ width: "100%" }}
-                    onPress={handleSubmitDate}
-                  />
                   {date && (
+                    <StyledButton
+                      title="Pilih Tanggal"
+                      style={{ width: "100%" }}
+                      onPress={handleSubmitDate}
+                    />
+                  )}
+                  {date && displayDate && (
                     <StyledButton
                       title="Reset Tanggal"
                       style={{ width: "100%" }}
@@ -148,6 +151,34 @@ export default function ContentFilter({}) {
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.container}>
           <StyledButton
+            title={
+              displayDate
+                ? `${formatTimestamp(displayDate, { monthAbbr: true })}`
+                : "Tanggal"
+            }
+            variant={displayDate ? "primary" : "secondary"}
+            size="small"
+            onPress={() => setDateModalVisible(true)}
+            iconRight={
+              displayDate && (
+                <TouchableOpacity onPress={handleResetDate}>
+                  <XMarkIcon size={16} color={Colors.white} />
+                </TouchableOpacity>
+              )
+            }
+            iconLeft={
+              !displayDate && (
+                <CalendarIcon size={16} color={Colors.primaryDark} />
+              )
+            }
+            style={[
+              displayDate
+                ? { paddingRight: 12, paddingLeft: 14 }
+                : { paddingRight: 14, paddingLeft: 12 },
+              { gap: 6 },
+            ]}
+          />
+          <StyledButton
             title="Terdekat"
             onPress={() => router.setParams({ _filter: "near", _search: "" })}
             variant={
@@ -168,15 +199,6 @@ export default function ContentFilter({}) {
             onPress={() => router.setParams({ _filter: "all" })}
             variant={_filter === "all" ? "primary" : "secondary"}
             size="small"
-          />
-          <StyledButton
-            title={displayDate ? `Tanggal ${formatTimestamp(displayDate, false)}` : "Filter Tanggal"}
-            variant={displayDate ? "primary" : "secondary"}
-            size="small"
-            onPress={() => setDateModalVisible(true)}
-            iconRight={displayDate && <XMarkIcon size={16} color={Colors.white} />}
-            iconLeft={!displayDate && <CalendarIcon size={16} color={Colors.primaryDark} />}
-            style={[displayDate ? {paddingRight: 12, paddingLeft: 14} : {paddingRight: 14, paddingLeft: 12}, { gap: 6 }]}
           />
         </View>
       </ScrollView>

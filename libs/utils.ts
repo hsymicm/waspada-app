@@ -39,8 +39,7 @@ export const formatRatingCounter = (count: number) => {
 
 export const formatElapsedTime = (timestamp: any) => {
   const current: any = new Date()
-  const timestampDate = timestamp.toDate()
-  const elapsedTime = current - timestampDate
+  const elapsedTime = current - timestamp
   const seconds = Math.floor(elapsedTime / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
@@ -76,7 +75,18 @@ export const parseMetadataTimestamp = (date: string) => {
   }
 }
 
-export const formatTimestamp = (date: Date, showTime: boolean = true) => {
+interface FormatTimestampOptions {
+  showTime?: boolean
+  monthAbbr?: boolean
+  showDay?: boolean
+}
+
+export const formatTimestamp = (
+  date: Date,
+  options: FormatTimestampOptions = {}
+) => {
+  const { showTime, monthAbbr, showDay } = options
+
   const monthNames = [
     "Januari",
     "Februari",
@@ -92,9 +102,37 @@ export const formatTimestamp = (date: Date, showTime: boolean = true) => {
     "Desember",
   ]
 
+  const monthAbbrNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agu",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ]
+
+  const dayNames = [
+    "Minggu",
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat",
+    "Sabtu",
+  ]
+
   const day = date.getDate()
-  const month = monthNames[date.getMonth()]
+  const month = monthAbbr
+    ? monthAbbrNames[date.getMonth()]
+    : monthNames[date.getMonth()]
   const year = date.getFullYear()
+  const dayName = showDay ? `${dayNames[date.getDay()]}, ` : ""
 
   let hours = date.getHours()
   const minutes = date.getMinutes().toString().padStart(2, "0")
@@ -104,9 +142,10 @@ export const formatTimestamp = (date: Date, showTime: boolean = true) => {
   hours = hours ? hours : 12
 
   if (!showTime) {
-    return `${month} ${day}, ${year}`
+    return `${dayName}${day} ${month} ${year}`
+  } else {
+    return `${dayName}${day} ${month} ${year} - ${hours}:${minutes} ${ampm}`
   }
-  return `${month} ${day}, ${year} - ${hours}:${minutes} ${ampm}`
 }
 
 export const kMToLongitudes = (km: number, atLatitude: number) => {
