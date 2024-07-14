@@ -31,8 +31,8 @@ import * as Sharing from "expo-sharing"
 import * as FileSystem from "expo-file-system"
 
 interface getReportsTypes {
-  order?: "date" | "voteCounter"
-  filter?: "date"
+  order: "date" | "voteCounter"
+  date?: Date
 }
 
 const getStartEndTimestamp = (date: Date) => {
@@ -57,10 +57,23 @@ const getStartEndTimestamp = (date: Date) => {
 }
 
 export const getReports = {
-  firstBatch: async function ({ order, filter }: getReportsTypes) {
+  firstBatch: async function ({ order, date }: getReportsTypes) {
     try {
       const reportRef = collection(db, "reports")
-      const dataQuery = query(reportRef, orderBy(order, "desc"), limit(10))
+      let dataQuery
+
+      if (date) {
+        const { start, end } = getStartEndTimestamp(date)
+        dataQuery = query(
+          reportRef,
+          where("date", ">=", start),
+          where("date", "<=", end),
+          orderBy(order, "desc"),
+          limit(10)
+        )
+      } else {
+        dataQuery = query(reportRef, orderBy(order, "desc"), limit(10))
+      }
 
       const dataSnapshot = await getDocs(dataQuery)
       const lastVisible = dataSnapshot.docs[dataSnapshot.docs.length - 1]
@@ -70,7 +83,7 @@ export const getReports = {
       dataSnapshot.forEach((doc) => {
         const reportId = doc.id
         const data = doc.data()
-        const date = formatElapsedTime(data.date)
+        const date = data.date.toDate()
         const obj = { uid: reportId, ...data, date }
         arr.push(obj)
       })
@@ -81,19 +94,33 @@ export const getReports = {
     }
   },
 
-  nextBatch: async function (key: string) {
+  nextBatch: async function (key: string, { order, date }: getReportsTypes) {
     if (!key) {
       throw new Error("Error, key is missing or invalid")
     }
 
     try {
       const reportRef = collection(db, "reports")
-      const dataQuery = query(
-        reportRef,
-        orderBy("date", "desc"),
-        startAfter(key),
-        limit(10)
-      )
+      let dataQuery
+
+      if (date) {
+        const { start, end } = getStartEndTimestamp(date)
+        dataQuery = query(
+          reportRef,
+          where("date", ">=", start),
+          where("date", "<=", end),
+          orderBy(order, "desc"),
+          startAfter(key),
+          limit(10)
+        )
+      } else {
+        dataQuery = query(
+          reportRef,
+          orderBy(order, "desc"),
+          startAfter(key),
+          limit(10)
+        )
+      }
 
       const dataSnapshot = await getDocs(dataQuery)
       const lastVisible = dataSnapshot.docs[dataSnapshot.docs.length - 1]
@@ -103,7 +130,7 @@ export const getReports = {
       dataSnapshot.forEach((doc) => {
         const reportId = doc.id
         const data = doc.data()
-        const date = formatElapsedTime(data.date)
+        const date = data.date.toDate()
         const obj = { uid: reportId, ...data, date }
         arr.push(obj)
       })

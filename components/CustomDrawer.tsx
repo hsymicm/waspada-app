@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native"
 import StyledIconButton from "./StyledIconButton"
 import { XMarkIcon as CloseIcon } from "react-native-heroicons/solid"
-import { router, usePathname } from "expo-router"
+import { router, useNavigation, usePathname } from "expo-router"
 import { Colors } from "../themes/Colors"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { ScrollView } from "react-native-gesture-handler"
@@ -9,11 +9,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useAuth } from "../contexts/AuthContext"
 import { useEffect, useState } from "react"
 
-function CustomDrawerItem({ label, name, path, currentRoute }) {
+function CustomDrawerItem({ label, name, path, currentRoute, navigation }) {
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      onPress={() => router.navigate(path)}
+      onPress={() => {
+        router.push({ pathname: path })
+        navigation.closeDrawer()
+      }}
       style={[
         styles.drawerItemContainer,
         currentRoute === name && { backgroundColor: Colors.lightGray },
@@ -73,6 +76,7 @@ export default function CustomDrawer({ navigation }) {
           name="index"
           path="/(app)"
           currentRoute={currentRoute}
+          navigation={navigation}
         />
         {currentUser ? (
           <>
@@ -81,12 +85,14 @@ export default function CustomDrawer({ navigation }) {
               name="addpost"
               path="/(app)/(auth)/addpost"
               currentRoute={currentRoute}
+              navigation={navigation}
             />
             <CustomDrawerItem
               label="Profil"
               name="profile"
               path="/(app)/(auth)/profile"
               currentRoute={currentRoute}
+              navigation={navigation}
             />
             <TouchableOpacity
               activeOpacity={0.7}

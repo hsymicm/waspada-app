@@ -26,9 +26,10 @@ export default function ReportHistory() {
       setLoading(true)
       const result = await getReportsHistory(currentUser)
       setData(result)
-      setLoading(false)
     } catch (error) {
       console.log(error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -52,7 +53,7 @@ export default function ReportHistory() {
       renderItem={({ item }) => (
         <FlatCard
           id={item.id}
-          image={item.imageUrl}
+          image={item?.type === "video" ? item.thumbnail : item.imageUrl}
           date={item.date}
           location={`${item.subdistrict}, ${item.district}`}
           description={item.description}

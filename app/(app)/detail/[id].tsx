@@ -18,7 +18,7 @@ import {
 import { BookmarkIcon as BookmarkIconOutline } from "react-native-heroicons/outline"
 import StyledIconButton from "../../../components/StyledIconButton"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { kMToLongitudes } from "../../../libs/utils"
+import { kMToLongitudes, showToast } from "../../../libs/utils"
 import { useLocalSearchParams } from "expo-router"
 import {
   downloadAndShareFile,
@@ -80,6 +80,11 @@ function DetailPost() {
   }, [])
 
   const handleArchiveSubmit = async () => {
+    if (!currentUser) {
+      showToast("Tidak bisa arsip, Anda harus masuk terlebih dahulu!")
+      return
+    }
+    
     setActionLoading(true)
     try {
       await handleArchiveReport(
@@ -98,9 +103,10 @@ function DetailPost() {
   const handleShare = async (url: string, filename: string) => {
     setActionLoading(true)
     try {
-      console.log("sharing...")
+      showToast("Membagikan laporan...")
       await downloadAndShareFile(url, filename)
     } catch (error) {
+      showToast("Gagal, membagikan laporan")
       console.log(error)
     } finally {
       setActionLoading(false)
@@ -118,8 +124,11 @@ function DetailPost() {
       }
     }
 
-    if (currentUser && id) {
+    if (id) {
       fetchReportDetail(id)
+    }
+
+    if (currentUser && id) {
       checkUserHasArchived()
     }
   }, [currentUser, id])

@@ -23,6 +23,7 @@ import {
 } from "react-native-heroicons/solid"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { getUserProfile } from "../../../../models/profileModel"
+import { showToast } from "../../../../libs/utils"
 
 interface ProfileMenuProps {
   children: any
@@ -88,6 +89,7 @@ export default function Profile() {
       const profile = await getUserProfile(currentUser)
       setProfile(profile)
     } catch (error) {
+      showToast("Gagal memuat profil Anda")
       console.log(error?.message || "Error, something happened")
     }
   }

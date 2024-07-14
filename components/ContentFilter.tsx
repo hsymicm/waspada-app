@@ -107,14 +107,14 @@ export default function ContentFilter({}) {
                 <View style={{ display: "flex", padding: 16, gap: 8 }}>
                   {date && (
                     <StyledButton
-                      title="Pilih Tanggal"
+                      title="Pilih"
                       style={{ width: "100%" }}
                       onPress={handleSubmitDate}
                     />
                   )}
                   {date && displayDate && (
                     <StyledButton
-                      title="Reset Tanggal"
+                      title="Reset"
                       style={{ width: "100%" }}
                       variant="secondary"
                       onPress={handleResetDate}
@@ -195,7 +195,7 @@ export default function ContentFilter({}) {
             size="small"
           />
           <StyledButton
-            title="Semua"
+            title="Terbaru"
             onPress={() => router.setParams({ _filter: "all" })}
             variant={_filter === "all" ? "primary" : "secondary"}
             size="small"

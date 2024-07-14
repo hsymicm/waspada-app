@@ -10,6 +10,7 @@ import {
   arrayRemove,
   where,
   documentId,
+  orderBy,
 } from "firebase/firestore"
 import {
   FIREBASE_DB as db,
@@ -84,7 +85,11 @@ export const getArchiveReports = async (currentUser: any) => {
     }
 
     const reportsRef = collection(db, "reports")
-    const q = query(reportsRef, where(documentId(), "in", archivedReportsId))
+    const q = query(
+      reportsRef,
+      where(documentId(), "in", archivedReportsId),
+      orderBy("date", "desc")
+    )
     const querySnapshot = await getDocs(q)
 
     const archivedReports = querySnapshot.docs.map((doc) => {
@@ -106,7 +111,7 @@ export const getArchiveReports = async (currentUser: any) => {
 
 export const hasUserArchivedReport = async (currentUser, reportId) => {
   if (!currentUser) {
-    throw new Error("Error, invalid auth")
+    return false
   }
 
   if (!reportId) {
@@ -154,7 +159,11 @@ export const getReportsHistory = async (currentUser: any) => {
     }
 
     const reportsRef = collection(db, "reports")
-    const q = query(reportsRef, where(documentId(), "in", reportsHistoryId))
+    const q = query(
+      reportsRef,
+      where(documentId(), "in", reportsHistoryId),
+      orderBy("date", "desc")
+    )
     const querySnapshot = await getDocs(q)
 
     const reportsHistory = querySnapshot.docs.map((doc) => {
@@ -228,8 +237,13 @@ export const updateUserProfile = async (
 
       const blob = await response.blob()
 
-      const ext = profilePicture.substring(profilePicture.lastIndexOf("/") + 1).split(".")[1]
-      const storageRef = ref(storage, `users/${userId}/profile-picture/profile-picture-${userId}.${ext}`)
+      const ext = profilePicture
+        .substring(profilePicture.lastIndexOf("/") + 1)
+        .split(".")[1]
+      const storageRef = ref(
+        storage,
+        `users/${userId}/profile-picture/profile-picture-${userId}.${ext}`
+      )
 
       const storageSnapshot = await uploadBytes(storageRef, blob)
       const downloadUrl = await getDownloadURL(storageSnapshot.ref)

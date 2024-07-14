@@ -21,6 +21,7 @@ import { geocode, revGeocode } from "../libs/geo"
 import { router } from "expo-router"
 import { Shadow } from "react-native-shadow-2"
 import TextSkeleton from "./Skeleton/TextSkeleton"
+import { showToast } from "../libs/utils"
 
 function LocationComponent({
   address,
@@ -123,24 +124,20 @@ export default function CurrentLocationFeed({ currentUser }) {
     }
   }
 
-  const fetchNearbyReports = async (searchLocation?: string | null, date?: string | null) => {
-    setReports([])
-    setLoading(true)
-
+  const fetchNearbyReports = async (
+    searchLocation?: string | null,
+    date?: string | null
+  ) => { 
     try {
-      let coords: any
-
-      console.log(`Date String: ${date}`)
+      setReports([])
+      setLoading(true)
 
       const dateFilter = date && date !== "" ? new Date(date) : null
 
-      console.log(dateFilter)
-
-      if (searchLocation && searchLocation !== "") {
-        coords = await getLocationBySearch(searchLocation)
-      } else {
-        coords = await getCurrentLocation()
-      }
+      const coords =
+        searchLocation && searchLocation !== ""
+          ? await getLocationBySearch(searchLocation)
+          : await getCurrentLocation()
 
       const response = await getReportsByLocation({
         lat: coords.latitude,
@@ -151,15 +148,17 @@ export default function CurrentLocationFeed({ currentUser }) {
 
       setReports(response)
     } catch (error) {
+      showToast("Gagal memuat laporan")
       console.log(error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const onRefresh = async () => {
     setRefresh(true)
     setReports([])
-    await fetchNearbyReports(_search)
+    await fetchNearbyReports(_search, _date)
     setRefresh(false)
   }
 
@@ -195,10 +194,7 @@ export default function CurrentLocationFeed({ currentUser }) {
           />
         }
         ListFooterComponent={
-          <CardSkeleton
-            isLoading={isLoading}
-            firstLoad={true}
-          />
+          <CardSkeleton isLoading={isLoading} firstLoad={true} />
         }
         renderItem={({ item }) =>
           !isLoading ? (

@@ -18,7 +18,7 @@ import {
 } from "../models/profileModel"
 import VoteCounter from "./VoteCounter"
 import { downloadAndShareFile } from "../models/reportModel"
-import { formatElapsedTime, formatTimestamp } from "../libs/utils"
+import { formatElapsedTime, formatTimestamp, showToast } from "../libs/utils"
 
 interface CardProps {
   id: string
@@ -65,6 +65,11 @@ function Card({
   }, [currentUser, id])
 
   const handleArchiveSubmit = async () => {
+    if (!currentUser) {
+      showToast("Tidak bisa arsip, Anda harus masuk terlebih dahulu!")
+      return
+    }
+
     setLoading(true)
     try {
       await handleArchiveReport(
@@ -83,9 +88,10 @@ function Card({
   const handleShare = async (url: string, filename: string) => {
     setLoading(true)
     try {
-      console.log("sharing...")
+      showToast("Membagikan laporan...")
       await downloadAndShareFile(url, filename)
     } catch (error) {
+      showToast("Gagal, membagikan laporan")
       console.log(error)
     } finally {
       setLoading(false)

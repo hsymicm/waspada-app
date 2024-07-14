@@ -9,7 +9,7 @@ import { useAuth } from "../../../../contexts/AuthContext"
 import { TouchableOpacity } from "react-native-gesture-handler"
 import { PhotoIcon, PencilSquareIcon } from "react-native-heroicons/solid"
 import TextInputField from "../../../../components/TextInputField"
-import { formatTimestamp } from "../../../../libs/utils"
+import { formatTimestamp, showToast } from "../../../../libs/utils"
 import StyledButton from "../../../../components/StyledButton"
 import { Shadow } from "react-native-shadow-2"
 import TextSkeleton from "../../../../components/Skeleton/TextSkeleton"
@@ -36,15 +36,21 @@ export default function EditProfile() {
   }
 
   const fetchProfile = async () => {
-    setLoading(true)
-    const res = await getUserProfile(currentUser)
-    setProfile(res)
-    setEditProfile({
-      description: res.description,
-      displayName: res.displayName,
-      profilePicture: res.profilePicture,
-    })
-    setLoading(false)
+    try {
+      setLoading(true)
+      const res = await getUserProfile(currentUser)
+      setProfile(res)
+      setEditProfile({
+        description: res.description,
+        displayName: res.displayName,
+        profilePicture: res.profilePicture,
+      })
+    } catch (error) {
+      showToast("Gagal memuat profil Anda")
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getUpdatedFields = (profile: any, editedProfile: any) => {
@@ -74,11 +80,11 @@ export default function EditProfile() {
   }
 
   const handleSubmit = async () => {
-    if (!checkChanges()) {
-      throw new Error("Error, nothing changed")
-    }
-
     try {
+      if (!checkChanges()) {
+        throw new Error("Error, nothing changed")
+      }
+
       const updatedFields = getUpdatedFields(profile, editProfile)
       
       const profilePicture = updatedFields?.profilePicture
@@ -94,8 +100,10 @@ export default function EditProfile() {
       }
 
       await updateUserProfile(currentUser, updatedFields)
+      showToast("Sukses, perubahan profil tersimpan")
       await fetchProfile()
     } catch (error) {
+      showToast("Gagal menyimpan perubahan profil Anda")
       console.log(error?.message || "Error, something happened")
     }
   }
@@ -267,7 +275,7 @@ export default function EditProfile() {
           {/* <Text>{JSON.stringify(result)}</Text> */}
         </View>
       </ScrollView>
-      <Shadow
+      {checkChanges() && <Shadow
         style={{ width: "100%" }}
         offset={[0, -1]}
         distance={8}
@@ -281,7 +289,7 @@ export default function EditProfile() {
             disabled={!checkChanges()}
           />
         </View>
-      </Shadow>
+      </Shadow>}
     </View>
   )
 }

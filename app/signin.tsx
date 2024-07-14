@@ -30,26 +30,23 @@ export default function SignIn() {
   const { _signup, _resetpassword, _email } = useLocalSearchParams()
 
   const handleSignIn = async () => {
-    setFormLoading(true)
-
     setStatus({
       isError: true,
       message: "",
     })
-
+    
     if (!email) {
       setStatus({ isError: true, message: "Invalid email" })
-      setFormLoading(false)
       return
     }
 
     if (!password) {
       setStatus({ isError: true, message: "Invalid credential" })
-      setFormLoading(false)
       return
     }
-
+    
     try {
+      setFormLoading(true)
       await userSignIn(email, password)
       await AsyncStorage.setItem("not_first_time", "true")
 
@@ -59,15 +56,14 @@ export default function SignIn() {
       router.replace("/")
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
+    } finally {
+      setFormLoading(false)
     }
-
-    setFormLoading(false)
   }
 
   const handleGuestSignIn = async () => {
-    setFormLoading(true)
-
     try {
+      setFormLoading(true)
       const tempUser = {
         username: "tempusername",
         email: "tempemail@example.com",
@@ -83,9 +79,9 @@ export default function SignIn() {
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage() })
       // console.log(e)
+    } finally {
+      setFormLoading(false)
     }
-
-    setFormLoading(false)
   }
 
   useEffect(() => {

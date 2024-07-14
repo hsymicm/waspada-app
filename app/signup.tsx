@@ -35,34 +35,31 @@ export default function SignUp() {
   }
 
   const handleSignUp = async () => {
-    setFormLoading(true)
     setStatus({ isError: true, message: "" })
 
     if (!username) {
       setStatus({ isError: true, message: "Username is empty" })
-      setFormLoading(false)
       return
     }
 
     if (!email) {
       setStatus({ isError: true, message: "Email is empty" })
-      setFormLoading(false)
       return
     }
 
     if (!password) {
       setStatus({ isError: true, message: "Credential is empty" })
-      setFormLoading(false)
       return
     }
 
     if (password !== confirmPassword) {
       setStatus({ isError: true, message: "Credential doesn't match" })
-      setFormLoading(false)
       return
     }
 
     try {
+      setFormLoading(true)
+
       const usernameCheckRef = doc(db, "usernames", username)
       const usernameDoc = await getDoc(usernameCheckRef)
 
@@ -115,9 +112,9 @@ export default function SignUp() {
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
       console.log(e)
+    } finally {
+      setFormLoading(false)
     }
-
-    setFormLoading(false)
   }
 
   return (

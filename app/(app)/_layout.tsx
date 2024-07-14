@@ -48,7 +48,6 @@ export default function AppLayout() {
         <Drawer.Screen
           name="index"
           options={{
-            // unmountOnBlur: true,
             header: ({ navigation }) => (
               <Header
                 title="Beranda"

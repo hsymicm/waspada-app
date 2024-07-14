@@ -2,7 +2,7 @@ import { View, Text, StyleSheet } from "react-native"
 import StyledIconButton from "./StyledIconButton"
 import React, { memo, useEffect, useState } from "react"
 import { Colors } from "../themes/Colors"
-import { formatRatingCounter } from "../libs/utils"
+import { formatRatingCounter, showToast } from "../libs/utils"
 import {
   ChevronUpIcon as UpVoteIcon,
   ChevronDownIcon as DownVoteIcon,
@@ -44,9 +44,13 @@ function VoteCounter({ card, reportId, rating, userId, onUpdate }: VoteCounterPr
   }, [rating, userId])
 
   const handleVoteSubmit = async (voteValue: 1 | 0 | -1) => {
-    if (!userId) throw new Error("Invalid auth")
-
+    
     try {
+      if (!userId) {
+        showToast("Tidak bisa vote, Anda harus masuk terlebih dahulu!")
+        return
+      }
+
       let newVoteValue = voteValue
 
       if (currentVote === voteValue) {
@@ -63,6 +67,7 @@ function VoteCounter({ card, reportId, rating, userId, onUpdate }: VoteCounterPr
 
       onUpdate
     } catch (error) {
+      showToast("Gagal submit vote")
       console.error("Error submitting vote: ", error)
     }
   }

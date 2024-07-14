@@ -1,3 +1,5 @@
+import { ToastAndroid } from "react-native"
+
 export const scrollTop = (ref: any) => {
   if (ref?.current) {
     ref.current?.scrollTo({
@@ -150,4 +152,8 @@ export const formatTimestamp = (
 
 export const kMToLongitudes = (km: number, atLatitude: number) => {
   return (km * 0.0089831) / Math.cos(atLatitude * (Math.PI / 180))
+}
+
+export const showToast = (message: string) => {
+  ToastAndroid.show(message, ToastAndroid.SHORT)
 }

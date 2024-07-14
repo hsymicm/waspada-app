@@ -14,31 +14,59 @@ import { PlusIcon } from "react-native-heroicons/solid"
 import { getReports } from "../models/reportModel"
 import Card from "../components/Card"
 import CardSkeleton from "../components/Skeleton/CardSkeleton"
-import { router } from "expo-router"
+import { router, useLocalSearchParams } from "expo-router"
 import { Shadow } from "react-native-shadow-2"
+import { showToast } from "../libs/utils"
 
 export default function PopularFeed({ currentUser }) {
+  const { _filter, _date }: any = useLocalSearchParams()
+
   const [reports, setReports] = useState([])
   const [lastReport, setLastReport] = useState(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [isRefresh, setRefresh] = useState<boolean>(false)
   const [visibleReports, setVisibleReports] = useState<string[]>([])
 
-  const fetchAllReports = async () => {
-    setLoading(true)
-    const res = await getReports.firstBatch({
-      order: "voteCounter"
-    })
-    setReports(res.data)
-    setLastReport(res.lastKey)
-    setLoading(false)
-  }
-  const onEnd = async () => {
-    if (!isLoading && lastReport) {
+  const fetchAllReports = async (date?: string | null) => {
+    try {
+      setReports([])
       setLoading(true)
-      const res = await getReports.nextBatch(lastReport)
+
+      const dateFilter = date && date !== "" ? new Date(date) : null
+      const res = await getReports.firstBatch({
+        order: "voteCounter",
+        date: dateFilter
+      })
+
+      setReports(res.data)
+      setLastReport(res.lastKey)
+
+    } catch (error) {
+      showToast("Gagal memuat laporan")
+      console.log(error?.message || "An error has occured")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const onEnd = async () => {
+    if (isLoading && !lastReport) return
+    
+    try {
+      setLoading(true)
+      const dateFilter = _date && _date !== "" ? new Date(_date) : null
+
+      const res = await getReports.nextBatch(lastReport, {
+        order: "voteCounter",
+        date: dateFilter
+      })
+      
       setReports([...reports, ...res.data])
       setLastReport(res.lastKey ? res.lastKey : null)
+    } catch (error) {
+      showToast("Gagal memuat laporan")
+      console.log(error?.message || "An error has occured")
+    } finally {
       setLoading(false)
     }
   }
@@ -47,7 +75,7 @@ export default function PopularFeed({ currentUser }) {
     setRefresh(true)
     setReports([])
     setLastReport(null)
-    await fetchAllReports()
+    await fetchAllReports(_date)
     setRefresh(false)
   }
 
@@ -65,8 +93,8 @@ export default function PopularFeed({ currentUser }) {
   ])
 
   useEffect(() => {
-    fetchAllReports()
-  }, [])
+    fetchAllReports(_date)
+  }, [_filter, _date])
 
   return (
     <View style={{ position: "relative", flex: 1 }}>
@@ -101,6 +129,7 @@ export default function PopularFeed({ currentUser }) {
                 : item.videoUrl
             }
             type={item?.type}
+            isDateElapsed={_date && _date !== "" ? false : true}
             isVisible={visibleReports.includes(item.uid)}
             thumbnail={item?.thumbnail}
           />
