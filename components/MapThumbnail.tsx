@@ -1,9 +1,9 @@
 import MapView, { MapMarker, PROVIDER_GOOGLE } from "react-native-maps"
 import StyledIconButton from "./StyledIconButton"
-import { View, StyleSheet } from "react-native"
+import { View, StyleSheet, Linking } from "react-native"
 import { useRef } from "react"
 import { Colors } from "../themes/Colors"
-import { ArrowsPointingOutIcon } from "react-native-heroicons/solid"
+import { ArrowsPointingOutIcon, ArrowTopRightOnSquareIcon } from "react-native-heroicons/solid"
 
 export default function MapThumbnail({ initialRegion, onExpand }) {
   const mapRef = useRef(null)
@@ -16,6 +16,10 @@ export default function MapThumbnail({ initialRegion, onExpand }) {
         style={styles.map}
         provider={PROVIDER_GOOGLE}
         scrollEnabled={false}
+        zoomEnabled={false}
+        zoomTapEnabled={false}
+        focusable={false}
+        showsTraffic
       >
         <MapMarker
           coordinate={{
@@ -32,11 +36,30 @@ export default function MapThumbnail({ initialRegion, onExpand }) {
           backgroundColor: "#00000060",
           borderRadius: 12,
           position: "absolute",
-          top: 16,
+          bottom: 16,
           right: 16,
         }}
       >
         <ArrowsPointingOutIcon size={18} color={Colors.white} />
+      </StyledIconButton>
+      <StyledIconButton
+        onPress={() =>
+          Linking.openURL(
+            `geo:0,0?q=${initialRegion.latitude},${
+              initialRegion.longitude
+            }(${"Laporan Kecelakaan"})`
+          )
+        }
+        width={36}
+        style={{
+          backgroundColor: "#00000060",
+          borderRadius: 12,
+          position: "absolute",
+          top: 16,
+          right: 16,
+        }}
+      >
+        <ArrowTopRightOnSquareIcon size={18} color={Colors.white} />
       </StyledIconButton>
     </View>
   )

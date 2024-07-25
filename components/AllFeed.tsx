@@ -37,8 +37,13 @@ export default function AllFeed({ currentUser }) {
         date: dateFilter
       })
 
-      setReports(res.data)
-      setLastReport(res.lastKey)
+      if (res.data.length > 0) {
+        setReports(res.data)
+        setLastReport(res.lastKey)
+      } else {
+        showToast("Tidak ada laporan kecelakaan...")
+      }
+
     } catch (error) {
       showToast("Gagal memuat laporan")
       console.log(error?.message || "An error has occured")
@@ -48,7 +53,7 @@ export default function AllFeed({ currentUser }) {
   }
 
   const onEnd = async () => {
-    if (isLoading && !lastReport) return
+    if (isLoading || !lastReport) return
     
     try {
       setLoading(true)
@@ -127,6 +132,7 @@ export default function AllFeed({ currentUser }) {
                 : item.videoUrl
             }
             type={item?.type}
+            isDateElapsed={_date && _date !== "" ? false : true}
             isVisible={visibleReports.includes(item.uid)}
             thumbnail={item?.thumbnail}
           />
@@ -140,25 +146,6 @@ export default function AllFeed({ currentUser }) {
           />
         }
       />
-      {currentUser && (
-        <TouchableOpacity
-          onPress={() => router.navigate("/(auth)/addpost")}
-          activeOpacity={1}
-          style={{ position: "absolute", bottom: 48, right: 36 }}
-        >
-          <Shadow offset={[0, 2]} distance={4} startColor={Colors.shadow}>
-            <View
-              style={{
-                backgroundColor: Colors.primary,
-                padding: 16,
-                borderRadius: 32,
-              }}
-            >
-              <PlusIcon size={28} color={Colors.white} />
-            </View>
-          </Shadow>
-        </TouchableOpacity>
-      )}
     </View>
   )
 }

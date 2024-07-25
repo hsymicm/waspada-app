@@ -8,6 +8,7 @@ import { ScrollView } from "react-native-gesture-handler"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useAuth } from "../contexts/AuthContext"
 import { useEffect, useState } from "react"
+import { showToast } from "../libs/utils"
 
 function CustomDrawerItem({ label, name, path, currentRoute, navigation }) {
   return (
@@ -48,6 +49,7 @@ export default function CustomDrawer({ navigation }) {
         routes: [{ name: "signin" }],
       })
       if (currentUser) await userSignOut()
+      showToast("Akun berhasil dikeluarkan")
     } catch (error) {
       console.log(error)
     }

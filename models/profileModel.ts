@@ -11,6 +11,8 @@ import {
   where,
   documentId,
   orderBy,
+  startAfter,
+  limit,
 } from "firebase/firestore"
 import {
   FIREBASE_DB as db,
@@ -62,51 +64,113 @@ export const handleArchiveReport = async (
   }
 }
 
-export const getArchiveReports = async (currentUser: any) => {
-  if (!currentUser) {
-    throw new Error("Error, invalid auth")
-  }
-
-  try {
-    const userId = currentUser.uid
-
-    const userRef = doc(db, "users", userId)
-    const userDoc = await getDoc(userRef)
-
-    if (!userDoc.exists()) {
-      throw new Error("Error, user document does not exist")
+export const getArchiveReports = {
+  firstBatch: async (currentUser: any, batchLimit: number = 10) => {
+    if (!currentUser) {
+      throw new Error("Error, invalid auth")
     }
 
-    const userData = userDoc.data()
-    const archivedReportsId = userData.archivedReports || []
+    try {
+      const userId = currentUser.uid
 
-    if (archivedReportsId.length === 0) {
-      return []
-    }
+      const userRef = doc(db, "users", userId)
+      const userDoc = await getDoc(userRef)
 
-    const reportsRef = collection(db, "reports")
-    const q = query(
-      reportsRef,
-      where(documentId(), "in", archivedReportsId),
-      orderBy("date", "desc")
-    )
-    const querySnapshot = await getDocs(q)
-
-    const archivedReports = querySnapshot.docs.map((doc) => {
-      const data = doc.data()
-      const date = formatTimestamp(data.date.toDate())
-
-      return {
-        id: doc.id,
-        ...data,
-        date,
+      if (!userDoc.exists()) {
+        throw new Error("Error, user document does not exist")
       }
-    })
 
-    return archivedReports
-  } catch (error) {
-    throw new Error(error.message || "Error, something happened")
-  }
+      const userData = userDoc.data()
+      const archivedReportsId = userData.archivedReports || []
+
+      if (archivedReportsId.length === 0) {
+        return { data: [], lastKey: null }
+      }
+
+      const reportsRef = collection(db, "reports")
+      const q = query(
+        reportsRef,
+        where(documentId(), "in", archivedReportsId),
+        orderBy("date", "desc"),
+        limit(batchLimit)
+      )
+      const querySnapshot = await getDocs(q)
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
+
+      const archivedReports = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        const date = data.date.toDate()
+
+        return {
+          id: doc.id,
+          ...data,
+          date,
+        }
+      })
+
+      return { data: archivedReports, lastKey: lastVisible }
+    } catch (error) {
+      throw new Error(error.message || "Error, something happened")
+    }
+  },
+
+  nextBatch: async (
+    currentUser: any,
+    lastKey: any,
+    batchLimit: number = 10
+  ) => {
+    if (!currentUser) {
+      throw new Error("Error, invalid auth")
+    }
+
+    if (!lastKey) {
+      throw new Error("Error, last key is missing or invalid")
+    }
+
+    try {
+      const userId = currentUser.uid
+
+      const userRef = doc(db, "users", userId)
+      const userDoc = await getDoc(userRef)
+
+      if (!userDoc.exists()) {
+        throw new Error("Error, user document does not exist")
+      }
+
+      const userData = userDoc.data()
+      const archivedReportsId = userData.archivedReports || []
+
+      if (archivedReportsId.length === 0) {
+        return { data: [], lastKey: null }
+      }
+
+      const reportsRef = collection(db, "reports")
+      const q = query(
+        reportsRef,
+        where(documentId(), "in", archivedReportsId),
+        orderBy("date", "desc"),
+        startAfter(lastKey),
+        limit(batchLimit)
+      )
+      const querySnapshot = await getDocs(q)
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
+
+      const archivedReports = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        const date = data.date.toDate()
+
+        return {
+          id: doc.id,
+          ...data,
+          date,
+        }
+      })
+
+      return { data: archivedReports, lastKey: lastVisible }
+    } catch (error) {
+      throw new Error(error.message || "Error, something happened")
+    }
+  },
 }
 
 export const hasUserArchivedReport = async (currentUser, reportId) => {
@@ -136,62 +200,122 @@ export const hasUserArchivedReport = async (currentUser, reportId) => {
   }
 }
 
-export const getReportsHistory = async (currentUser: any) => {
-  if (!currentUser) {
-    throw new Error("Error, invalid auth")
-  }
-
-  try {
-    const userId = currentUser.uid
-
-    const userRef = doc(db, "users", userId)
-    const userDoc = await getDoc(userRef)
-
-    if (!userDoc.exists()) {
-      throw new Error("Error, user document does not exist")
+export const getReportsHistory = {
+  firstBatch: async (currentUser: any, batchLimit: number = 10) => {
+    if (!currentUser) {
+      throw new Error("Error, invalid auth")
     }
 
-    const userData = userDoc.data()
-    const reportsHistoryId = userData.reportHistory || []
+    try {
+      const userId = currentUser.uid
 
-    if (reportsHistoryId.length === 0) {
-      return []
-    }
+      const userRef = doc(db, "users", userId)
+      const userDoc = await getDoc(userRef)
 
-    const reportsRef = collection(db, "reports")
-    const q = query(
-      reportsRef,
-      where(documentId(), "in", reportsHistoryId),
-      orderBy("date", "desc")
-    )
-    const querySnapshot = await getDocs(q)
-
-    const reportsHistory = querySnapshot.docs.map((doc) => {
-      const data = doc.data()
-      const date = formatTimestamp(data.date.toDate())
-
-      return {
-        id: doc.id,
-        ...data,
-        date,
+      if (!userDoc.exists()) {
+        throw new Error("Error, user document does not exist")
       }
-    })
 
-    return reportsHistory
-  } catch (error) {
-    throw new Error(error.message || "Error, something happened")
-  }
+      const userData = userDoc.data()
+      const reportsHistoryId = userData.reportHistory || []
+
+      if (reportsHistoryId.length === 0) {
+        return { data: [], lastKey: null }
+      }
+
+      const reportsRef = collection(db, "reports")
+      const q = query(
+        reportsRef,
+        where(documentId(), "in", reportsHistoryId),
+        orderBy("date", "desc"),
+        limit(batchLimit)
+      )
+      const querySnapshot = await getDocs(q)
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
+
+      const reportsHistory = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        const date = data.date.toDate()
+
+        return {
+          id: doc.id,
+          ...data,
+          date,
+        }
+      })
+
+      return { data: reportsHistory, lastKey: lastVisible }
+    } catch (error) {
+      throw new Error(error.message || "Error, something happened")
+    }
+  },
+
+  nextBatch: async (
+    currentUser: any,
+    lastKey: any,
+    batchLimit: number = 10
+  ) => {
+    if (!currentUser) {
+      throw new Error("Error, invalid auth")
+    }
+
+    if (!lastKey) {
+      throw new Error("Error, last key is missing or invalid")
+    }
+
+    try {
+      const userId = currentUser.uid
+
+      const userRef = doc(db, "users", userId)
+      const userDoc = await getDoc(userRef)
+
+      if (!userDoc.exists()) {
+        throw new Error("Error, user document does not exist")
+      }
+
+      const userData = userDoc.data()
+      const reportsHistoryId = userData.reportHistory || []
+
+      if (reportsHistoryId.length === 0) {
+        return { data: [], lastKey: null }
+      }
+
+      const reportsRef = collection(db, "reports")
+      const q = query(
+        reportsRef,
+        where(documentId(), "in", reportsHistoryId),
+        orderBy("date", "desc"),
+        startAfter(lastKey),
+        limit(batchLimit)
+      )
+      const querySnapshot = await getDocs(q)
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
+
+      const reportsHistory = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        const date = data.date.toDate()
+
+        return {
+          id: doc.id,
+          ...data,
+          date,
+        }
+      })
+
+      return { data: reportsHistory, lastKey: lastVisible }
+    } catch (error) {
+      throw new Error(error.message || "Error, something happened")
+    }
+  },
 }
 
-export const getUserProfile = async (currentUser: any) => {
-  if (!currentUser) {
-    throw new Error("Error, invalid auth")
+export const getUserProfile = async (uid: string) => {
+  if (!uid) {
+    throw new Error("Error, invalid uid")
   }
 
   try {
-    const userId = currentUser.uid
-
-    const userRef = doc(db, "users", userId)
+    const userRef = doc(db, "users", uid)
     const userDoc = await getDoc(userRef)
 
     if (!userDoc.exists()) {

@@ -146,7 +146,11 @@ export default function CurrentLocationFeed({ currentUser }) {
         date: dateFilter,
       })
 
-      setReports(response)
+      if (response.length > 0) {
+        setReports(response)
+      } else {
+        showToast("Tidak ada laporan kecelakaan...")
+      }
     } catch (error) {
       showToast("Gagal memuat laporan")
       console.log(error)
@@ -224,25 +228,6 @@ export default function CurrentLocationFeed({ currentUser }) {
           />
         }
       />
-      {currentUser && (
-        <TouchableOpacity
-          onPress={() => router.navigate("/(auth)/addpost")}
-          activeOpacity={1}
-          style={{ position: "absolute", bottom: 48, right: 36 }}
-        >
-          <Shadow offset={[0, 2]} distance={4} startColor={Colors.shadow}>
-            <View
-              style={{
-                backgroundColor: Colors.primary,
-                padding: 16,
-                borderRadius: 32,
-              }}
-            >
-              <PlusIcon size={28} color={Colors.white} />
-            </View>
-          </Shadow>
-        </TouchableOpacity>
-      )}
     </View>
   )
 }

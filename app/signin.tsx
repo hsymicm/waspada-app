@@ -8,8 +8,9 @@ import TextInputField from "../components/TextInputField"
 import { useAuth } from "../contexts/AuthContext"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { AuthNotification } from "../components/AuthNotification"
-import { handleAuthErrorMessage } from "../libs/utils"
+import { handleAuthErrorMessage, showToast } from "../libs/utils"
 import { StackActions } from "@react-navigation/native"
+import { getUserProfile } from "../models/profileModel"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -47,14 +48,18 @@ export default function SignIn() {
     
     try {
       setFormLoading(true)
-      await userSignIn(email, password)
+      const currentUser = await userSignIn(email, password)
       await AsyncStorage.setItem("not_first_time", "true")
 
+      const profile = await getUserProfile(currentUser.user.uid)
+      showToast(`Selamat datang ${profile.displayName}`)
       if (navigation.canGoBack()) {
         navigation.dispatch(StackActions.popToTop())
       }
       router.replace("/")
+      
     } catch (e) {
+      console.log(e)
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
     } finally {
       setFormLoading(false)
@@ -75,7 +80,8 @@ export default function SignIn() {
       if (navigation.canGoBack()) {
         navigation.dispatch(StackActions.popToTop())
       }
-      router.replace("/")
+      router.replace("/(app)")
+      showToast("Selamat datang")
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage() })
       // console.log(e)

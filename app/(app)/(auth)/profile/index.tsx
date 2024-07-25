@@ -79,6 +79,7 @@ export default function Profile() {
         routes: [{ name: "signin" }],
       })
       if (currentUser) await userSignOut()
+      showToast("Akun berhasil dikeluarkan")
     } catch (error) {
       console.log(error)
     }
@@ -86,7 +87,7 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const profile = await getUserProfile(currentUser)
+      const profile = await getUserProfile(currentUser.uid)
       setProfile(profile)
     } catch (error) {
       showToast("Gagal memuat profil Anda")

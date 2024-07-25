@@ -10,6 +10,7 @@ import {
   formatTimestamp,
   kMToLongitudes,
   parseMetadataTimestamp,
+  showToast,
 } from "../../../libs/utils"
 import MapThumbnail from "../../../components/MapThumbnail"
 import { revGeocode } from "../../../libs/geo"
@@ -107,15 +108,20 @@ export default function AddPost() {
         date: parsedDate,
         thumbnail: source.type === "photo" ? null : thumbnail.uri,
       }
-
+      await new Promise((resolve) => setTimeout(resolve, 500))
       await setReport(report)
+      
+      // if (navigation.canGoBack()) {
+        
+      // }
 
-      if (navigation.canGoBack()) {
-        navigation.dispatch(StackActions.popToTop())
-      }
-
-      router.replace("/")
+      // router.replace("/(app)")
       setLoading(false)
+      showToast("Berhasil melaporkan kecelakaan")
+      navigation.reset({
+        index: 0,
+        routes: [{name: "(app)"}]
+      })
     } catch (error) {
       console.log(error)
     } finally {
@@ -169,7 +175,7 @@ export default function AddPost() {
           latitude: parseFloat(GPSLatitude),
           longitude: parseFloat(GPSLongitude),
           latitudeDelta: 0.00001,
-          longitudeDelta: kMToLongitudes(1.0, parseFloat(GPSLatitude)),
+          longitudeDelta: kMToLongitudes(0.8, parseFloat(GPSLatitude)),
         })
       }
     }
@@ -261,7 +267,8 @@ export default function AddPost() {
                   <Text style={styles.inputLabel}>Waktu</Text>
                   <Text style={styles.inputText}>
                     {formatTimestamp(
-                      parseMetadataTimestamp(data.timestamp.DateTime)
+                      parseMetadataTimestamp(data.timestamp.DateTime),
+                      {showDay: true, showTime: true}
                     )}
                   </Text>
                 </View>

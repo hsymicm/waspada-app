@@ -1,5 +1,4 @@
 import {
-  Pressable,
   View,
   Image,
   Text,
@@ -7,12 +6,11 @@ import {
   TouchableWithoutFeedback,
 } from "react-native"
 import {
-  ChevronRightIcon as Arrow,
   MapPinIcon as Pin,
 } from "react-native-heroicons/solid"
 import { Colors } from "../themes/Colors"
-import { TouchableOpacity } from "react-native-gesture-handler"
 import { router } from "expo-router"
+import { formatTimestamp } from "../libs/utils"
 
 interface FlatCard {
   description: string
@@ -27,7 +25,6 @@ export default function FlatCard({ description, date, location, image, id }) {
     <TouchableWithoutFeedback
       onPress={() => router.navigate(`/(app)/detail/${id}`)}
     >
-
       <View style={styles.container}>
         <View style={{ flex: 1 }}>
           <Image
@@ -54,9 +51,15 @@ export default function FlatCard({ description, date, location, image, id }) {
                 {location}
               </Text>
             </View>
-            <Text style={styles.date}>{date}</Text>
+            <Text style={styles.date}>
+              {formatTimestamp(date, { showDay: true })}
+            </Text>
           </View>
-          <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">
+          <Text
+            style={styles.description}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
             {description}
           </Text>
         </View>

@@ -82,6 +82,7 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
       let distances = {}
       let realRatios = {}
       let minDistance = null
+      
       for (const ratio of ratios) {
         const parts = ratio.split(":")
         const realRatio = parseInt(parts[0]) / parseInt(parts[1])

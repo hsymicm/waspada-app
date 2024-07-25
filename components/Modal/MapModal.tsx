@@ -1,14 +1,28 @@
-import { Modal, View, StyleSheet, ActivityIndicator } from "react-native"
+import {
+  Modal,
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Linking,
+} from "react-native"
 import {
   ArrowPathIcon,
-  ArrowsPointingInIcon,
+  ArrowLeftIcon,
+  ArrowTopRightOnSquareIcon,
 } from "react-native-heroicons/solid"
 import StyledIconButton from "../StyledIconButton"
 import MapView, { MapMarker, PROVIDER_GOOGLE } from "react-native-maps"
 import { useRef } from "react"
 import { Colors } from "../../themes/Colors"
 
-export default function MapModal({ visible, setVisible, initialRegion }) {
+export default function MapModal({
+  visible,
+  setVisible,
+  initialRegion,
+  address,
+}) {
   const mapRef = useRef(null)
 
   const centerMap = () => {
@@ -28,6 +42,7 @@ export default function MapModal({ visible, setVisible, initialRegion }) {
           initialRegion={initialRegion}
           style={styles.map}
           provider={PROVIDER_GOOGLE}
+          showsTraffic
         >
           <MapMarker
             coordinate={{
@@ -51,34 +66,68 @@ export default function MapModal({ visible, setVisible, initialRegion }) {
       <View
         style={{
           position: "absolute",
-          top: 32,
-          right: 32,
+          top: 16,
+          left: 16,
           display: "flex",
-          gap: 16,
+          gap: 8,
         }}
       >
         <StyledIconButton
           onPress={() => setVisible(false)}
           width={46}
           style={{
-            backgroundColor: "#00000060",
+            backgroundColor: Colors.primary,
             borderRadius: 16,
           }}
         >
-          <ArrowsPointingInIcon size={24} color={Colors.white} />
+          <ArrowLeftIcon size={24} color={Colors.secondary} />
         </StyledIconButton>
         {initialRegion && (
           <StyledIconButton
             onPress={centerMap}
             width={46}
             style={{
-              backgroundColor: "#00000060",
+              backgroundColor: Colors.secondary,
               borderRadius: 16,
             }}
           >
-            <ArrowPathIcon size={24} color={Colors.white} />
+            <ArrowPathIcon size={24} color={Colors.primary} />
           </StyledIconButton>
         )}
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          bottom: 16,
+          left: 0,
+          right: 0,
+          padding: 16,
+        }}
+      >
+        <View style={styles.detailContainer}>
+          <View style={styles.detailInfo}>
+            <Text style={styles.detailLabel}>Lokasi Laporan Kecelakaan</Text>
+            <Text style={styles.detailParagraph}>{address}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL(
+                `geo:0,0?q=${initialRegion.latitude},${
+                  initialRegion.longitude
+                }(${"Laporan Kecelakaan"})`
+              )
+            }
+          >
+            <View
+              style={{
+                padding: 4,
+                transform: [{ translateX: 5 }, { translateY: -5 }],
+              }}
+            >
+              <ArrowTopRightOnSquareIcon size={20} color={Colors.accent} />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   )
@@ -93,5 +142,34 @@ const styles = StyleSheet.create({
   map: {
     width: "100%",
     height: "100%",
+  },
+
+  detailContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.gray,
+    borderRadius: 16,
+    padding: 16,
+  },
+
+  detailInfo: {
+    flex: 1,
+    gap: 8,
+  },
+
+  detailLabel: {
+    fontFamily: "Nunito-Bold",
+    fontSize: 16,
+    color: Colors.black,
+  },
+
+  detailParagraph: {
+    fontFamily: "Nunito-Regular",
+    fontSize: 16,
+    color: Colors.black,
   },
 })

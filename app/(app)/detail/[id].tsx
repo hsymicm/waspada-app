@@ -66,7 +66,7 @@ function DetailPost() {
         latitude: parseFloat(data.latitude),
         longitude: parseFloat(data.longitude),
         latitudeDelta: 0.00001,
-        longitudeDelta: kMToLongitudes(1.0, parseFloat(data.latitude)),
+        longitudeDelta: kMToLongitudes(0.8, parseFloat(data.latitude)),
       })
       setReportDetail(data)
     } catch (error) {
@@ -84,7 +84,7 @@ function DetailPost() {
       showToast("Tidak bisa arsip, Anda harus masuk terlebih dahulu!")
       return
     }
-    
+
     setActionLoading(true)
     try {
       await handleArchiveReport(
@@ -162,6 +162,7 @@ function DetailPost() {
               visible={mapModalVisible}
               setVisible={setMapModalVisible}
               initialRegion={initialRegion}
+              address={reportDetail?.address}
             />
             {!isLoading && reportDetail?.many && (
               <View style={styles.headerNotification}>
@@ -185,6 +186,7 @@ function DetailPost() {
                   <VideoPlayer
                     source={reportDetail?.videoUrl}
                     thumbnail={reportDetail?.thumbnail}
+                    thumbnailResizeMode="cover"
                     shouldPlay={!(sourceModalVisible || mapModalVisible)}
                     styles={{
                       width: "100%",
@@ -250,7 +252,8 @@ function DetailPost() {
                 {!isLoading && reportDetail ? (
                   <Text style={styles.detailParagraph}>
                     {formatTimestamp(reportDetail.date, {
-                      showDay: true, showTime: true
+                      showDay: true,
+                      showTime: true,
                     })}
                   </Text>
                 ) : (
@@ -301,13 +304,13 @@ function DetailPost() {
           </View>
         </View>
       </View>
-      <StatusBar
+      {/* <StatusBar
         hidden={sourceModalVisible}
         translucent
         animated
         backgroundColor={Colors.white}
         style="dark"
-      />
+      /> */}
     </>
   )
 }

@@ -42,10 +42,9 @@ export default function ResetPassword() {
       if (navigation.canGoBack()) {
         navigation.dispatch(StackActions.popToTop())
       }
-      
+
       const path: any = `/signin?_resetpassword=true&_email=${email}`
       router.replace(path)
-
     } catch (e) {
       setStatus({ isError: true, message: handleAuthErrorMessage(e?.code) })
     }
@@ -91,6 +90,7 @@ export default function ResetPassword() {
             value={email}
             setValue={setEmail}
             type="email-address"
+            autoCapitalize="none"
             placeholder="Masukkan alamat email"
           />
           <Text style={{ fontFamily: "Nunito-Regular", fontSize: 14 }}>

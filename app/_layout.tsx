@@ -8,7 +8,7 @@ import { AuthProvider } from "../contexts/AuthContext"
 import { Camera } from "expo-camera"
 import * as Location from "expo-location"
 import * as ImagePicker from "expo-image-picker"
-import 'react-native-get-random-values'
+import "react-native-get-random-values"
 
 export const unstable_settings = {
   initialRouteName: "signin",
@@ -36,7 +36,7 @@ export default function RootLayout() {
           await Camera.requestCameraPermissionsAsync()
           await ImagePicker.requestMediaLibraryPermissionsAsync()
 
-          await new Promise((resolve) => setTimeout(resolve, 200))
+          // await new Promise((resolve) => setTimeout(resolve, 200))
           setAppReady(true)
         } catch (e) {
           // handle
@@ -58,7 +58,8 @@ export default function RootLayout() {
       {isAppReady && (
         <AppLoader isLoaded={isAppReady}>
           <AuthProvider>
-            <Stack initialRouteName="(app)">
+            <Stack>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(app)" options={{ headerShown: false }} />
               <Stack.Screen name="signin" options={{ headerShown: false }} />
               <Stack.Screen name="signup" options={{ headerShown: false }} />

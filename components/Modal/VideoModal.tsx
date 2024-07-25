@@ -4,7 +4,7 @@ import {
   SafeAreaView,
 } from "react-native"
 import StyledIconButton from "../StyledIconButton"
-import { XMarkIcon } from "react-native-heroicons/solid"
+import { ArrowLeftIcon } from "react-native-heroicons/solid"
 import { Colors } from "../../themes/Colors"
 import VideoPlayer from "../VideoPlayer"
 
@@ -32,13 +32,13 @@ const VideoModal = ({ visible, setVisible, url, thumbnail }) => {
             position: "absolute",
             top: 16,
             left: 16,
-            backgroundColor: "#00000060",
+            backgroundColor: Colors.primary,
             borderRadius: 16,
           }}
           width={46}
           onPress={() => setVisible(!visible)}
         >
-          <XMarkIcon color={Colors.white} />
+          <ArrowLeftIcon color={Colors.secondary} />
         </StyledIconButton>
       </SafeAreaView>
       <View
@@ -46,13 +46,14 @@ const VideoModal = ({ visible, setVisible, url, thumbnail }) => {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "black",
+          backgroundColor: Colors.white,
         }}
       >
         <View style={{ position: "relative", width: "100%", elevation: 1 }}>
           <VideoPlayer
             source={url}
             thumbnail={thumbnail}
+            thumbnailResizeMode="contain"
             shouldPlay={true}
             styles={{
               width: "100%",

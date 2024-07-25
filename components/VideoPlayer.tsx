@@ -7,6 +7,7 @@ function VideoPlayer({
   source,
   thumbnail,
   shouldPlay,
+  thumbnailResizeMode = "contain",
   resizeMode = "contain",
   styles = {},
 }) {
@@ -65,7 +66,12 @@ function VideoPlayer({
         usePoster
         isLooping
         posterSource={{ uri: thumbnail }}
-        posterStyle={{ resizeMode: "cover" }}
+        posterStyle={{
+          resizeMode:
+            thumbnailResizeMode === "contain"
+              ? ResizeMode.CONTAIN
+              : ResizeMode.COVER,
+        }}
         onPlaybackStatusUpdate={(status) => setStatus(status)}
       />
     </View>

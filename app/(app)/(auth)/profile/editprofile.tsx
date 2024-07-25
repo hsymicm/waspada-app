@@ -38,7 +38,7 @@ export default function EditProfile() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const res = await getUserProfile(currentUser)
+      const res = await getUserProfile(currentUser.uid)
       setProfile(res)
       setEditProfile({
         description: res.description,
