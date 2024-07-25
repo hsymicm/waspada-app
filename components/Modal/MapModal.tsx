@@ -49,7 +49,7 @@ export default function MapModal({
               latitude: initialRegion.latitude,
               longitude: initialRegion.longitude,
             }}
-            title={"Lokasi Laporan"}
+            tappable={false}
           />
         </MapView>
       ) : (
