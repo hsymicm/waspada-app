@@ -5,11 +5,10 @@ import {
   View,
   FlatList,
   RefreshControl,
-  TouchableOpacity,
 } from "react-native"
 
 import { Colors } from "../themes/Colors"
-import { MapPinIcon as Pin, PlusIcon } from "react-native-heroicons/solid"
+import { MapPinIcon as Pin } from "react-native-heroicons/solid"
 
 import { getReportsByLocation } from "../models/reportModel"
 import { useLocalSearchParams } from "expo-router"
@@ -18,8 +17,6 @@ import Card from "../components/Card"
 import CardSkeleton from "../components/Skeleton/CardSkeleton"
 import * as Location from "expo-location"
 import { geocode, revGeocode } from "../libs/geo"
-import { router } from "expo-router"
-import { Shadow } from "react-native-shadow-2"
 import TextSkeleton from "./Skeleton/TextSkeleton"
 import { showToast } from "../libs/utils"
 
@@ -66,7 +63,7 @@ export default function CurrentLocationFeed({ currentUser }) {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [isRefresh, setRefresh] = useState<boolean>(false)
 
-  const [currentAddress, setcurrentAddress] = useState(null)
+  const [currentAddress, setCurrentAddress] = useState(null)
   const [locationPermission, requestLocationPermission] =
     Location.useForegroundPermissions()
 
@@ -99,7 +96,7 @@ export default function CurrentLocationFeed({ currentUser }) {
       const obj = response.items[0].address
       const formattedAddress = formatAddress(obj)
 
-      setcurrentAddress(formattedAddress)
+      setCurrentAddress(formattedAddress)
 
       return { latitude, longitude }
     } catch (error) {
@@ -116,7 +113,7 @@ export default function CurrentLocationFeed({ currentUser }) {
         : response
 
       const formattedAddress = formatAddress(address)
-      setcurrentAddress(formattedAddress)
+      setCurrentAddress(formattedAddress)
 
       return { latitude: position.lat, longitude: position.lng }
     } catch (error) {

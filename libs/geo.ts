@@ -4,7 +4,9 @@ interface locationType {
 }
 
 export const revGeocode = async ({ latitude, longitude }: locationType) => {
-  const url = `https://revgeocode.search.hereapi.com/v1/revgeocode?apiKey=${process.env.HERE_API_KEY}&at=${latitude},${longitude}&types=street&lang=id`
+
+  const key = process.env.HERE_API_KEY
+  const url = `https://revgeocode.search.hereapi.com/v1/revgeocode?apiKey=${key}&at=${latitude},${longitude}&types=street&lang=id`
 
   try {
     const response = await fetch(url)
@@ -72,7 +74,9 @@ export const geoAutocomplete = async ({ query, latitude, longitude }) => {
 export const geoAutosuggest = async ({ query, latitude, longitude }) => {
   const url = `https://autosuggest.search.hereapi.com/v1/autosuggest?q=${encodeURI(
     query
-  )}&at=${latitude},${longitude}&lang=id&limit=5&apiKey=${process.env.HERE_API_KEY}`
+  )}&at=${latitude},${longitude}&lang=id&limit=5&apiKey=${
+    process.env.HERE_API_KEY
+  }`
 
   try {
     const response = await fetch(url)

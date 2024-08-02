@@ -1,21 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   StyleSheet,
-  Text,
   View,
   FlatList,
   RefreshControl,
-  TouchableOpacity,
 } from "react-native"
 
 import { Colors } from "../themes/Colors"
-import { PlusIcon } from "react-native-heroicons/solid"
 
 import { getReports } from "../models/reportModel"
 import Card from "../components/Card"
 import CardSkeleton from "../components/Skeleton/CardSkeleton"
-import { router, useLocalSearchParams } from "expo-router"
-import { Shadow } from "react-native-shadow-2"
+import { useLocalSearchParams } from "expo-router"
 import { showToast } from "../libs/utils"
 
 export default function PopularFeed({ currentUser }) {

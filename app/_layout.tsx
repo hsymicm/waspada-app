@@ -30,19 +30,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     const prepare = async () => {
-      if (fontsLoaded && !fontError) {
-        try {
-          await Location.requestForegroundPermissionsAsync()
-          await Camera.requestCameraPermissionsAsync()
-          await ImagePicker.requestMediaLibraryPermissionsAsync()
+      if (!fontsLoaded && fontError) return
+      
+      try {
+        await Location.requestForegroundPermissionsAsync()
+        await Camera.requestCameraPermissionsAsync()
+        await ImagePicker.requestMediaLibraryPermissionsAsync()
 
-          // await new Promise((resolve) => setTimeout(resolve, 200))
-          setAppReady(true)
-        } catch (e) {
-          // handle
-        } finally {
-          await SplashScreen.hideAsync()
-        }
+        setAppReady(true)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        await SplashScreen.hideAsync()
       }
     }
 

@@ -35,6 +35,7 @@ import {
   StopIcon,
 } from "react-native-heroicons/solid"
 import { Colors } from "../themes/Colors"
+import { showToast } from "../libs/utils"
 
 export default function CameraScreen({ setCameraModalVisible, setResult }) {
   // Location Permissions
@@ -116,55 +117,80 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
   }
 
   const takePicture = async () => {
-    if (isRatioSet) {
+    if (!isRatioSet) return
+
+    try {
       const data = await cameraRef.current.takePictureAsync({
         exif: true,
         quality: 0,
         imageType: ImageType.jpg,
         skipProcessing: true,
       })
-
+  
       setImage(data)
-
+  
       const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       })
-
+  
       const locData = {
         GPSLatitude: loc.coords.latitude,
         GPSLongitude: loc.coords.longitude,
         GPSAltitude: loc.coords.altitude,
       }
-
+  
       setLocation(locData)
+    } catch (error) {
+      console.error(error)
+      showToast("Gagal mengambil foto")
+      setImage(null)
+      setLocation(null)
     }
   }
 
   const takeVideo = async () => {
-    setIsRecording(true)
-    const data = await cameraRef.current.recordAsync({
-      maxDuration: 35,
-      quality: VideoQuality["1080p"],
-      videoBitrate: 1 * 1000 * 1000,
-    })
-    setVideo(data)
+    if (!isRatioSet) return
+
+    try {
+      setIsRecording(true)
+      const data = await cameraRef.current.recordAsync({
+        maxDuration: 35,
+        quality: VideoQuality["1080p"],
+        videoBitrate: 1 * 1000 * 1000,
+      })
+      setVideo(data)
+    } catch (error) {
+      console.error(error)
+      setIsRecording(false)
+      showToast("Gagal merekam video")
+    }
   }
 
   const stopVideo = async () => {
-    await cameraRef.current.stopRecording()
+    if (!isRecording) return
 
-    const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    })
-    setIsRecording(false)
-
-    const locData = {
-      GPSLatitude: loc.coords.latitude,
-      GPSLongitude: loc.coords.longitude,
-      GPSAltitude: loc.coords.altitude,
+    try {
+      await cameraRef.current.stopRecording()
+  
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+  
+      const locData = {
+        GPSLatitude: loc.coords.latitude,
+        GPSLongitude: loc.coords.longitude,
+        GPSAltitude: loc.coords.altitude,
+      }
+  
+      setLocation(locData)
+    } catch (error) {
+      setVideo(null)
+      setLocation(null)
+      console.log(error)
+      showToast("Gagal mengambil data lokasi")
+    } finally {
+      setIsRecording(false)
     }
-
-    setLocation(locData)
   }
 
   const handleVideoControls = async () => {
@@ -274,6 +300,14 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
     return () => clearInterval(interval)
   }, [isRecording])
 
+  useEffect(() => {
+    (async() => {
+      requestCameraPermission()
+      requestLocationPermission()
+      requestMicrophonePermission()
+    })()
+  }, [])
+
   if (!cameraPermission && !locationPermission) {
     return <View />
   }
@@ -283,10 +317,6 @@ export default function CameraScreen({ setCameraModalVisible, setResult }) {
     !locationPermission?.granted ||
     !microphonePermission?.granted
   ) {
-    requestCameraPermission()
-    requestLocationPermission()
-    requestMicrophonePermission()
-
     return null
   }
 

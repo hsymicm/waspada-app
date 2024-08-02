@@ -9,7 +9,6 @@ import {
   XMarkIcon,
 } from "react-native-heroicons/solid"
 import { Colors } from "../themes/Colors"
-import { useEffect, useState } from "react"
 
 interface SearchFilterProps {
   style?: object
