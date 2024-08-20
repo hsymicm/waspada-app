@@ -44,18 +44,6 @@ export default function AddPost() {
   const navigation = useNavigation()
   const { currentUser } = useAuth()
 
-  const imagePicker = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-      exif: true,
-    })
-
-    if (!result.canceled) {
-      setResult(result.assets[0])
-    }
-  }
-
   const handleSubmit = async () => {
     const { description, source, location, timestamp } = data
     const { thumbnail } = source
@@ -111,11 +99,6 @@ export default function AddPost() {
       await new Promise((resolve) => setTimeout(resolve, 500))
       await setReport(report)
       
-      // if (navigation.canGoBack()) {
-        
-      // }
-
-      // router.replace("/(app)")
       setLoading(false)
       showToast("Berhasil melaporkan kecelakaan")
       navigation.reset({
@@ -204,6 +187,7 @@ export default function AddPost() {
         visible={mapModalVisible}
         setVisible={setMapModalVisible}
         initialRegion={initialRegion}
+        address={data?.location?.address}
       />
       <View style={{ flex: 1, height: "100%" }}>
         <ScrollView
