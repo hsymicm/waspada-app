@@ -39,15 +39,22 @@ export const formatRatingCounter = (count: number) => {
   }
 }
 
-export const formatElapsedTime = (timestamp: any) => {
-  const current: any = new Date()
-  const elapsedTime = current - timestamp
+export const formatElapsedTime = (timestamp: Date) => {
+  const current: Date = new Date()
+  const elapsedTime: number = current.getTime() - timestamp.getTime()
   const seconds = Math.floor(elapsedTime / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  const months = Math.floor(days / 30)
+  const years = Math.floor(days / 365)
 
-  if (hours >= 24) {
-    const days = Math.floor(hours / 24)
+
+  if (years >= 1) {
+    return `${years} tahun yang lalu`
+  } else if (months >= 1) {
+    return `${months} bulan yang lalu`
+  } else if (days >= 1) {
     return `${days} hari yang lalu`
   } else if (hours >= 1) {
     return `${hours} jam yang lalu`

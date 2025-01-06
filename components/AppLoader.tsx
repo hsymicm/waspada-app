@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react"
 import { Animated, View, Text, Image, StyleSheet } from "react-native"
 import { Colors } from "../themes/Colors"
 import { StatusBar } from "expo-status-bar"
+import React from "react"
 
 export function AppLoader({ children, isLoaded }) {
   const [animationComplete, setAnimationComplete] = useState(false)

@@ -20,7 +20,7 @@ import {
   FIREBASE_DB as db,
   FIREBASE_STORAGE as storage,
 } from "../firebase.config"
-import { formatElapsedTime, formatTimestamp } from "../libs/utils"
+import { formatElapsedTime } from "../libs/utils"
 import {
   distanceBetween,
   geohashForLocation,
