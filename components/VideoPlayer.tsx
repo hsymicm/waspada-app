@@ -58,7 +58,7 @@ function VideoPlayer({
         style={{ width: "100%", height: "100%" }}
         source={{ uri: source }}
         onLoadStart={() => setLoading(true)}
-        onLoad={() => videoRef.current.playAsync()}
+        onLoad={() => shouldPlay && videoRef.current.playAsync()}
         onReadyForDisplay={() => setLoading(false)}
         resizeMode={
           resizeMode === "contain" ? ResizeMode.CONTAIN : ResizeMode.COVER

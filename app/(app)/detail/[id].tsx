@@ -39,6 +39,7 @@ import { StatusBar } from "expo-status-bar"
 import VideoModal from "../../../components/Modal/VideoModal"
 import VideoPlayer from "../../../components/VideoPlayer"
 import { formatTimestamp } from "../../../libs/utils"
+import React from "react"
 
 function DetailPost() {
   const { id }: any = useLocalSearchParams()
@@ -187,7 +188,7 @@ function DetailPost() {
                     source={reportDetail?.videoUrl}
                     thumbnail={reportDetail?.thumbnail}
                     thumbnailResizeMode="cover"
-                    shouldPlay={!(sourceModalVisible || mapModalVisible)}
+                    shouldPlay={!sourceModalVisible && !mapModalVisible}
                     styles={{
                       width: "100%",
                       height: "100%",
